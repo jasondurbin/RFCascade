@@ -1,0 +1,156 @@
+:root{
+	--bg-color-dark: #121212;
+	--text-color-dark: #AAA;
+	--grid-color-dark: #CCC;
+	--canvas-border-color-dark: #000;
+	--settings-border-color-dark: #666666;
+	--settings-bg-color-dark: #121244;
+	--input-bg-color-dark: #333333;
+	--input-border-color-dark: #333333;
+	--link-color-dark: #AAF;
+	--theme-bg-color-dark: #444;
+	--theme-color-dark: #EEE;
+	--shadow-dark: #000;
+
+	--bg-color-light: #FFFFFF;
+	--text-color-light: #333;
+	--input-bg-color-light: #FFFFFF;
+	--input-border-color-light: #cccccc;
+	--canvas-border-color-light: #222;
+	--settings-border-color-light: #666666;
+	--settings-bg-color-light: #EEF;
+	--link-color-light: #33F;
+	--theme-bg-color-light: #EEE;
+	--theme-color-light: #333;
+	--shadow-light: #0003;
+	--grid-color-light: #555;
+}
+:root.dark{
+	--bg-color: var(--bg-color-dark);
+	--text-color: var(--text-color-dark);
+	--input-bg-color: var(--input-bg-color-dark);
+	--input-border-color: var(--input-border-color-dark);
+	--canvas-border-color: var(--canvas-border-color-dark);
+	--settings-border-color: var(--settings-border-color-dark);
+	--settings-bg-color: var(--settings-bg-color-dark);
+	--link-color: var(--link-color-dark);
+	--theme-bg-color: var(--theme-bg-color-dark);
+	--theme-color: var(--theme-color-dark);
+	--shadow: var(--shadow-dark);
+	--grid-color: var(--grid-color-dark);
+}
+:root.light{
+	--bg-color: var(--bg-color-light);
+	--text-color: var(--text-color-light);
+	--input-bg-color: var(--input-bg-color-light);
+	--input-border-color: var(--input-border-color-light);
+	--canvas-border-color: var(--canvas-border-color-light);
+	--settings-border-color: var(--settings-border-color-light);
+	--settings-bg-color: var(--settings-bg-color-light);
+	--link-color: var(--link-color-light);
+	--theme-bg-color: var(--theme-bg-color-light);
+	--theme-color: var(--theme-color-light);
+	--shadow: var(--shadow-light);
+	--grid-color: var(--grid-color-light);
+}
+@media (prefers-color-scheme: dark){
+	:root.auto{
+		--bg-color: var(--bg-color-dark);
+		--text-color: var(--text-color-dark);
+		--input-bg-color: var(--input-bg-color-dark);
+		--input-border-color: var(--input-border-color-dark);
+		--canvas-border-color: var(--canvas-border-color-dark);
+		--settings-border-color: var(--settings-border-color-dark);
+		--settings-bg-color: var(--settings-bg-color-dark);
+		--link-color: var(--link-color-dark);
+		--theme-bg-color: var(--theme-bg-color-dark);
+		--theme-color: var(--theme-color-dark);
+		--shadow: var(--shadow-dark);
+		--grid-color: var(--grid-color-dark);
+	}
+}
+@media (prefers-color-scheme: light){
+	:root.auto{
+		--bg-color: var(--bg-color-light);
+		--text-color: var(--text-color-light);
+		--input-bg-color: var(--input-bg-color-light);
+		--input-border-color: var(--input-border-color-light);
+		--canvas-border-color: var(--canvas-border-color-light);
+		--settings-border-color: var(--settings-border-color-light);
+		--settings-bg-color: var(--settings-bg-color-light);
+		--link-color: var(--link-color-light);
+		--theme-bg-color: var(--theme-bg-color-light);
+		--theme-color: var(--theme-color-light);
+		--shadow: var(--shadow-light);
+		--grid-color: var(--grid-color-light);
+	}
+}
+body{
+	padding: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	font-family: Arial, sans-serif;
+	margin: 10px;
+	transition: 0.3s;
+	background-color: var(--bg-color);
+	color: var(--text-color);
+}
+a{
+	color: var(--link-color);
+	text-decoration: none;
+}
+a:hover{
+	text-decoration: underline;
+}
+.body-content{
+	max-width: 800px;
+	line-height: 1.5em;
+}
+.theme-toggle{
+	background-color: var(--theme-bg-color);
+	color: var(--theme-color);
+	padding: 5px;
+	border-radius: 5px;
+	font-weight: bold;
+	text-decoration: none;
+	cursor: pointer;
+	border: none;
+}
+.theme-toggle:hover{
+	transition: 0.3s;
+	box-shadow:3px 3px var(--shadow);
+}
+input,
+textarea,
+select{
+	background-color: var(--input-bg-color);
+	color: var(--text-color);
+	border: 1px solid var(--input-border-color);
+	padding: 4px;
+	transition: 0.3s;
+}
+.container-full{
+	width: 100%;
+}
+.system-table{
+	border-collapse: collapse;
+}
+.system-table th,
+.system-table td.unit-header{
+	border: 1px solid var(--grid-color);
+	text-align: center;
+	padding: 2px;
+	max-width: 100px;
+	vertical-align: bottom;
+}
+.system-table td{
+	border: 1px solid var(--grid-color);
+	max-width: 100px;
+	padding: 2px;
+}
+.system-table td input{
+	max-width: 100px;
+	box-sizing: border-box;
+}
