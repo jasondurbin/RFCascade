@@ -142,12 +142,12 @@ select{
 	border: 1px solid var(--grid-color);
 	text-align: center;
 	padding: 2px;
-	max-width: 100px;
+	min-width: 100px;
 	vertical-align: bottom;
 }
 .system-table td{
 	border: 1px solid var(--grid-color);
-	max-width: 100px;
+	min-width: 100px;
 	padding: 2px;
 }
 .system-table td input{

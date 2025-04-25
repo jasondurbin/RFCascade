@@ -12,9 +12,12 @@ export class SysCalculationNode{
 	 * */
 	constructor(parent){
 		this.parent = parent;
-		this.linear_power_gain = 1.0;
-		this.linear_noise_power = parent.globals.linear_noise_power;
+		this.signal_power = 10**((-10 - 30)/10);
+		this.signal_power_ideal = this.signal_power;
+		this.power_gain = 1.0;
+		this.noise_power = parent.globals.noise_power;
 	}
+	get snr_ideal(){return this.signal_power_ideal/this.noise_power;}
 	get kb(){ return this.parent.globals.kb; }
 }
 
@@ -68,8 +71,8 @@ export class SysBlockABC{
 		val = this.cascpars[key];
 		if (val !== undefined) return val;
 
-		if (key == 'linear_voltage_gain') val = Math.sqrt(this.get_parameter('linear_power_gain'));
-		else if (key == 'linear_power_gain') val = 10**(this.get_parameter('gain')/10);
+		if (key == 'voltage_gain') val = Math.sqrt(this.get_parameter('power_gain'));
+		else if (key == 'power_gain') val = 10**(this.get_parameter('gain')/10);
 		else if (key == 'noise_factor') val = 10**(this.get_parameter('noise_figure')/10);
 		else if (key == 'noise_temperature') val = (this.get_parameter('noise_factor') - 1)*this.get_parameter('physical_temperature');
 		else if (key == 'physical_temperature_offset') val = 0.0;
@@ -88,8 +91,10 @@ export class SysBlockAmplifier extends SysBlockABC{
 	static title = 'Amplifier';
 	constructor(parent, pars){
 		super(parent, pars);
-		this.gain = 13;
-		this.noise_figure = 5;
+		if (pars === undefined) pars = {};
+		this.gain = pars['gain'] || 13;
+		this.noise_figure = pars['noise_figure'] || 5;
+		this.part_number = pars['part_number'] || "Test Amp";
 	}
 }
 
@@ -97,8 +102,10 @@ export class SysBlockPassive extends SysBlockABC{
 	static title = 'Passive';
 	constructor(parent, pars){
 		super(parent, pars);
-		this.gain = -1;
-		this.noise_figure = 1;
+		if (pars === undefined) pars = {};
+		this.gain = pars['gain'] || -1;
+		this.noise_figure = Math.abs(this.gain);
+		this.part_number = pars['part_number'] || "Test Passive";
 	}
 	process_inputs(){
 		super.process_inputs();

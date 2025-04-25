@@ -3,8 +3,12 @@ import {SceneParent} from "./scene/scene-abc.js"
 import {SceneSystemGlobals} from "./index-scenes.js"
 import {SysColumns} from "./rfcascade/columns.js"
 import {SysBlockAmplifier, SysBlockPassive, SysCalculationNode} from "./rfcascade/blocks.js"
-/** @import { BlockHint } from "./rfcascade/blocks.js" */
-/** @import { SysColumnHint } from "./rfcascade/columns.js" */
+/**
+ * @import { BlockHint } from "./rfcascade/blocks.js"
+ * @import { SysColumnHint } from "./rfcascade/columns.js"
+ */
+
+export const engineering_formatter = new Intl.NumberFormat('en-US', {notation: 'engineering'})
 
 document.addEventListener('DOMContentLoaded', () => {
 	new SceneTheme();
@@ -35,8 +39,8 @@ export class SceneControlSystemCalc extends SceneParent{
 
 		/** @type {Array<SysColumnHint>} */
 		this.columns = Array.from(SysColumns, (c) => new c(this));
-
 		this.blocks = [
+			new SysBlockPassive(this, {'gain': -2}),
 			new SysBlockAmplifier(this),
 			new SysBlockPassive(this),
 		]
@@ -54,7 +58,7 @@ export class SceneControlSystemCalc extends SceneParent{
 	add_row(obj){
 		const tr = document.createElement('tr');
 		this.columns.forEach((r) => {
-			const dtype = r.user_type;
+			const dtype = r.column_type;
 			if (!r.visible) return;
 			const td = document.createElement('td');
 			obj.map_cell(r.parameter_key, td);
@@ -62,7 +66,7 @@ export class SceneControlSystemCalc extends SceneParent{
 			else if (dtype == 'input'){
 				const inp = document.createElement('input');
 				inp.value = obj.get_parameter(r.parameter_key);
-				inp.setAttribute('type', 'number');
+				inp.setAttribute('type', r.input_type);
 				td.appendChild(inp);
 				inp.addEventListener('change', () => {this.updateWaiting = true;});
 				obj.map_input(r.parameter_key, inp);
@@ -71,6 +75,9 @@ export class SceneControlSystemCalc extends SceneParent{
 				// ignore because this is updated when calculation is complete.
 			}
 			else if (dtype == 'device-output'){
+				// ignore because this is updated when calculation is complete.
+			}
+			else if (dtype == 'system-auto'){
 				// ignore because this is updated when calculation is complete.
 			}
 			else throw Error(`Unknown column type ${dtype}.`);
@@ -87,8 +94,8 @@ export class SceneControlSystemCalc extends SceneParent{
 			if (!r.visible) return;
 			const td1 = document.createElement('th');
 			const td2 = document.createElement('td');
+			r.create_unit(td2);
 			td1.innerHTML = r.title;
-			td2.innerHTML = r.unit;
 			tr1.appendChild(td1);
 			tr2.appendChild(td2);
 			td2.classList = 'unit-header';
@@ -103,14 +110,29 @@ export class SceneControlSystemCalc extends SceneParent{
 				});
 
 				const node = new SysCalculationNode(this);
-				this.columns.forEach((c) => {
-					if (c.user_type == 'device-output') c.calculate_elements(this.blocks);
-				});
-				this.columns.forEach((c) => {
-					if (c.user_type == 'system-output') c.calculate(node, this.blocks);
+				this.blocks.forEach((b) => {
+					if (!b.enabled) return;
+					this.columns.forEach((c) => {
+						if (c.column_type == 'device-output' && (c.visible || c.required)){
+							c.calculate_element(node, b);
+						}
+					});
+					this.columns.forEach((c) => {
+						if (c.column_type == 'system-output' && (c.visible || c.required)) c.calculate_element(node, b);
+					});
+					this.columns.forEach((c) => {
+						if (c.column_type == 'system-auto' && (c.visible || c.required)) c.calculate_element(node, b);
+					});
 				});
 				this.updateWaiting = false;
 			}
+			this.columns.forEach((c) => {
+				if (c.reformatWaiting){
+					this.blocks.forEach((b) => {
+						c.reformat(b);
+					})
+				}
+			});
 			requestAnimationFrame(_calculate);
 		}
 		_calculate();
@@ -119,7 +141,12 @@ export class SceneControlSystemCalc extends SceneParent{
 	 * Format input Number to a string.
 	 *
 	 * @param {Number} value
+	 * @param {Boolean} [allowEng=true] Allow engineering format?
 	 * @returns {String}
 	 * */
-	format_float(value){ return `${value.toFixed(2)}`; }
+	format_float(value, allowEng){
+		const av = Math.abs(value);
+		if (av > 1e-2 && av < 1e3 || !allowEng) return `${value.toFixed(2)}`;
+		return engineering_formatter.format(value);
+	}
 }

@@ -14,7 +14,7 @@ export class SceneSystemGlobals extends SceneControl{
 		this.system_temperature = 16.85 + 273.15;
 		this.bandwidth = 1.0;
 		this.kb = c_boltzmann*this.bandwidth;
-		this.linear_noise_power = 10**((-173.98-30)/10);
+		this.noise_power = 10**((-173.98-30)/10);
 	}
 
 	/**
