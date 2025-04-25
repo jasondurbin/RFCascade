@@ -5,9 +5,10 @@
  * | SysColumnSystemLinearSignalPowerOutIdeal
  * | SysColumnElementLinearNoisePowerOut
  * | SysColumnSystemNoiseFigureContribution
+ * | SysColumnSystemNoiseFigureCascaded
  * )} ColumnSysCalcHint
  *
- * @typedef {'signal_power_out' | 'noise_power_out' | 'noise_figure_contribution'} KeySysCalcHint
+ * @typedef {'signal_power_out' | 'noise_power_out' | 'noise_figure_contribution' | 'noise_figure_cascade'} KeySysCalcHint
  */
 import {SysColumnABC} from "./columns-abc.js"
 import {ColumnUnitPower, ColumnUnitGain} from "../column-units.js"
@@ -73,7 +74,6 @@ export class SysColumnSystemGain extends SysColumnSystemOutput{
 }
 
 export class SysColumnSystemNoiseFigureContribution extends SysColumnSystemOutput{
-	static title = 'Noise Figure Contribution';
 	static unit = ColumnUnitGain;
 	static key = 'noise_figure_contribution';
 
@@ -83,10 +83,45 @@ export class SysColumnSystemNoiseFigureContribution extends SysColumnSystemOutpu
 		const snr2 = block.get_parameter('snr_out');
 		this.update(block, snr1/snr2);
 	}
+	create_unit(container){
+		super.create_unit(container);
+		this.unit.addEventListener('change', () => {
+			this.update_header();
+		})
+	}
+	get title(){
+		if (this.unit === undefined) return "Noise Figure Contribution";
+		if (this.unit.selected_unit == 'dB') return "Noise Figure Contribution";
+		return "Noise Factor Contribution";
+	}
+}
+
+export class SysColumnSystemNoiseFigureCascaded extends SysColumnSystemOutput{
+	static unit = ColumnUnitGain;
+	static key = 'noise_figure_cascade';
+
+	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
+	calculate_element(node, block){
+		const snr1 = node.snr_start;
+		const snr2 = block.get_parameter('snr_out');
+		this.update(block, snr1/snr2);
+	}
+	create_unit(container){
+		super.create_unit(container);
+		this.unit.addEventListener('change', () => {
+			this.update_header();
+		})
+	}
+	get title(){
+		if (this.unit === undefined) return "Cascaded Noise Figure";
+		if (this.unit.selected_unit == 'dB') return "Cascaded Noise Figure";
+		return "Cascaded Noise Factor";
+	}
 }
 
 export const ColumnSysCalc = [
 	SysColumnSystemLinearSignalPowerOutIdeal,
 	SysColumnElementLinearNoisePowerOut,
+	SysColumnSystemNoiseFigureCascaded,
 	SysColumnSystemNoiseFigureContribution,
 ]

@@ -4,9 +4,11 @@
  * | SysColumnElementGain
  * | SysColumnElementNoiseFigure
  * | SysColumnElementPartNumber
+ * | SysColumnElementP1dB
+ * | SysColumnElementLinearity
  * )} ColumnEleInputHint
  *
- * @typedef {'gain' | 'noise_figure', 'part_number'} KeyEleInputHint
+ * @typedef {'gain' | 'noise_figure' | 'part_number' | 'p1db' | 'linearity'} KeyEleInputHint
 */
 import { SysColumnABC } from "./columns-abc.js"
 
@@ -17,25 +19,46 @@ export class SysColumnElementInput extends SysColumnABC{
 }
 
 export class SysColumnElementGain extends SysColumnElementInput{
-	static title = 'Gain';
+	static title = 'Nominal Gain';
 	static unit = 'dB';
 	static key = 'gain';
+	static save_key = 'g';
 }
 
 export class SysColumnElementNoiseFigure extends SysColumnElementInput{
-	static title = 'Noise';
+	static title = 'Nominal Noise Figure';
 	static unit = 'dB';
 	static key = 'noise_figure';
+	static save_key = 'n';
 }
+
 export class SysColumnElementPartNumber extends SysColumnElementInput{
 	static title = 'Part Number';
 	static unit = '';
 	static key = 'part_number';
-	static input_type = 'string';
+	static input_type = 'text';
+	static save_key = 'p';
+}
+
+export class SysColumnElementP1dB extends SysColumnElementInput{
+	static title = 'Nominal P1dB';
+	static unit = 'dBm';
+	static key = 'p1db';
+	static save_key = '1';
+}
+
+export class SysColumnElementLinearity extends SysColumnElementInput{
+	static title = 'Linearity';
+	static unit = '';
+	static key = 'linearity';
+	static input_type = ['Ignore', 'Output Referred', 'Input Referred'];
+	static save_key = 'l';
 }
 
 export const ColumnEleInput = [
 	SysColumnElementPartNumber,
 	SysColumnElementGain,
-	SysColumnElementNoiseFigure
+	SysColumnElementNoiseFigure,
+	SysColumnElementLinearity,
+	SysColumnElementP1dB,
 ]

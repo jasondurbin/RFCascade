@@ -34,7 +34,8 @@ export class ColumnUnitABC{
 		this.col = col;
 		if (defaultUnit === undefined) defaultUnit = this.constructor.baseUnit;
 		this.defaultUnit = defaultUnit;
-		this.changed = true;
+		this.__converter = null;
+		this._changed = true;
 	}
 	/**
 	 * Build the unit dropdown.
@@ -59,18 +60,30 @@ export class ColumnUnitABC{
 			sel.appendChild(opt);
 		}
 		sel.addEventListener('change', () => {
-			this.changed = true;
+			this._changed = true;
 		})
 		return sel;
 	}
-	get allowEngineeringNotation(){
-		for (let i = 0; i < this.selector.length; i++){
-			const sel = this.selector[i];
-			if (!sel.selected) continue;
-			if (sel.innerHTML == this.constructor.baseUnit) return true;
-			return false;
+	addEventListener(k, cb){ this.selector.addEventListener(k, cb); }
+	get changed(){ return this.__converter === null || this._changed; }
+	get allowEngineeringNotation(){ return this.constructor.baseUnit == this.selected_unit; }
+	/**
+	 * Return selected unit
+	 *
+	 * @returns {String}
+	 * */
+	get selected_unit(){
+		if (this._changed){
+			this.__selected_unit = this.defaultUnit;
+			for (let i = 0; i < this.selector.length; i++){
+				const sel = this.selector[i];
+				if (!sel.selected) continue;
+				this.__selected_unit = sel.innerHTML;
+			}
+			this.__converter = null;
+			this._changed = false;
 		}
-		return false;
+		return this.__selected_unit;
 	}
 	/**
 	 * Convert value to selected unit.
@@ -79,24 +92,9 @@ export class ColumnUnitABC{
 	 * @returns {Number}
 	 * */
 	convert(value){
-		if (this.changed) {
-			this.__converter = this._find_converter(value);
-			this.changed = false;
-		};
+		if (value == Infinity || value == -Infinity) return Infinity;
+		if (this.changed) this.__converter = this.unitCallers[this.selected_unit];
 		return this.__converter(value);
-	}
-	/**
-	 * Find converter function
-	 *
-	 * @returns {(value: Number) => Number}
-	 * */
-	_find_converter(){
-		for (let i = 0; i < this.selector.length; i++){
-			const sel = this.selector[i];
-			if (!sel.selected) continue;
-			return this.unitCallers[sel.getAttribute('data-unit')];
-		}
-		return this.unitCallers[this.defaultUnit]
 	}
 	config(){}
 }
@@ -108,6 +106,7 @@ export class ColumnUnitPower extends ColumnUnitABC{
 		'dBm': (v) => 10*Math.log10(v*1000),
 		'dBW': (v) => 10*Math.log10(v),
 	}
+	get allowEngineeringNotation(){ return true; }
 }
 
 export class ColumnUnitTemperature extends ColumnUnitABC{

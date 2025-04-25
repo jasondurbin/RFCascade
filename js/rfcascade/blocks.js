@@ -4,6 +4,9 @@
  * @import {KeyHintAny} from "./columns.js"
  */
 
+export const c_T0 = 290;
+
+
 export class SysCalculationNode{
 	/**
 	 * Create a new system starting node.
@@ -16,6 +19,8 @@ export class SysCalculationNode{
 		this.signal_power_ideal = this.signal_power;
 		this.power_gain = 1.0;
 		this.noise_power = parent.globals.noise_power;
+
+		this.snr_start = this.snr_ideal;
 	}
 	get snr_ideal(){return this.signal_power_ideal/this.noise_power;}
 	get kb(){ return this.parent.globals.kb; }
@@ -29,6 +34,7 @@ export class SysBlockABC{
 	 * @param {Object} pars
 	 * */
 	constructor(parent, pars){
+		this.index = 0;
 		this.parent = parent;
 		this.cells = {};
 		this.calcpars = {};
@@ -45,8 +51,12 @@ export class SysBlockABC{
 	map_input(key, input){ this.inputs[key] = input; }
 	process_inputs(){
 		for (const [key, input] of Object.entries(this.inputs)){
-			this[key] = input.value;
+			let v = input.value;
+			if (input.getAttribute('type') == 'number') v = Number(v)
+			this[key] = v;
 		}
+		let lshow = this.linearity == 'Ignore' ? 'none': 'inline';
+		this.inputs['p1db'].style.display = lshow;
 	}
 	map_cell(key, td){ this.cells[key] = td; }
 	cell(key){ return this.cells[key]; }
@@ -71,12 +81,34 @@ export class SysBlockABC{
 		val = this.cascpars[key];
 		if (val !== undefined) return val;
 
-		if (key == 'voltage_gain') val = Math.sqrt(this.get_parameter('power_gain'));
-		else if (key == 'power_gain') val = 10**(this.get_parameter('gain')/10);
-		else if (key == 'noise_factor') val = 10**(this.get_parameter('noise_figure')/10);
-		else if (key == 'noise_temperature') val = (this.get_parameter('noise_factor') - 1)*this.get_parameter('physical_temperature');
+		const _gain_log = () => {
+			return 10*Math.log10(this.get_parameter('power_gain'))
+		}
+
+		if (key == 'power_gain') val = 10**(Number(this.get_parameter('gain'))/10);
+		else if (key == 'noise_factor') val = this.get_parameter('noise_figure_physical');
+		else if (key == 'noise_temperature'){
+			val = (10**(this.get_parameter('noise_figure')/10) - 1)*this.get_parameter('physical_temperature');
+		}
+		else if (key == 'noise_figure_physical') val = 1.0 + this.get_parameter('noise_temperature')/c_T0;
 		else if (key == 'physical_temperature_offset') val = 0.0;
 		else if (key == 'physical_temperature') val = this.get_parameter('physical_temperature_offset') + this.parent.globals.system_temperature;
+		else if (key == 'op1db'){
+			const d = this.get_parameter('linearity');
+
+			if (d == 'Ignore') val = Infinity;
+			else{
+				val = Number(this.get_parameter('p1db'));
+				if (d == 'Input Referred') val += _gain_log() - 1;
+				val = 10**((val - 30)/10);
+			}
+		}
+		else if (key == 'ip1db'){
+			const o = this.get_parameter('op1db');
+			if (o == Infinity) val = Infinity;
+			else val = 10**((10*Math.log10(o) - _gain_log() + 1)/10);
+
+		}
 		else throw Error(`Unknown parameter ${key}.`)
 		this.calcpars[key] = val;
 		return val;
@@ -95,6 +127,8 @@ export class SysBlockAmplifier extends SysBlockABC{
 		this.gain = pars['gain'] || 13;
 		this.noise_figure = pars['noise_figure'] || 5;
 		this.part_number = pars['part_number'] || "Test Amp";
+		this.p1db = pars['p1db'] || 10;
+		this.linearity = "Output Referred";
 	}
 }
 
@@ -106,10 +140,16 @@ export class SysBlockPassive extends SysBlockABC{
 		this.gain = pars['gain'] || -1;
 		this.noise_figure = Math.abs(this.gain);
 		this.part_number = pars['part_number'] || "Test Passive";
+		this.p1db = pars['p1db'] || 10;
+		this.linearity = "Ignore";
 	}
 	process_inputs(){
-		super.process_inputs();
 		this.inputs['noise_figure'].value = Math.abs(this.inputs['gain'].value);
+		super.process_inputs();
+	}
+	map_input(key, input){
+		super.map_input(key, input);
+		if (key == 'noise_figure') input.setAttribute('disabled', true);
 	}
 }
 

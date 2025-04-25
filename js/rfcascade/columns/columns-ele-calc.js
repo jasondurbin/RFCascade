@@ -3,23 +3,24 @@
  * @typedef {(
  * 	 SysColumnElementCalculated
  * | SysColumnElementLinearPowerGain
- * | SysColumnElementNoiseFactor
  * | SysColumnElementNoiseTemperature
+ * | SysColumnElementNoiseFigureActual
+ * | SysColumnElementDeviceTemperature
+ * | SysColumnElementDeviceOP1dB
+ * | SysColumnElementDeviceIP1dB
  * )} ColumnEleCalcHint
  *
- * @typedef {'power_gain' | 'noise_factor' | 'noise_temperature'} KeyEleCalcHint
+ * @typedef {'power_gain' | 'noise_factor' | 'noise_temperature' | 'noise_figure_physical' | 'physical_temperature' | 'op1db' | 'ip1db'} KeyEleCalcHint
  */
 import {SysColumnABC} from "./columns-abc.js"
-import {ColumnUnitTemperature, ColumnUnitPowerGain} from "../column-units.js"
+import {ColumnUnitTemperature, ColumnUnitPowerGain, ColumnUnitGain, ColumnUnitPower} from "../column-units.js"
 
 export class SysColumnElementCalculated extends SysColumnABC{
 	static defaults = {
 		...SysColumnABC.defaults,
 		'visible': true,
 	}
-
 	static type = 'device-output';
-
 	/**
 	 * Calculate element parameter.
 	 *
@@ -32,15 +33,20 @@ export class SysColumnElementCalculated extends SysColumnABC{
 }
 
 export class SysColumnElementLinearPowerGain extends SysColumnElementCalculated{
-	static title = 'Gain';
 	static unit = ColumnUnitPowerGain;
 	static key = 'power_gain';
-}
-
-export class SysColumnElementNoiseFactor extends SysColumnElementCalculated{
-	static title = 'Noise Factor';
-	static unit = '';
-	static key = 'noise_factor';
+	create_unit(container){
+		super.create_unit(container);
+		this.unit.addEventListener('change', () => {
+			this.update_header();
+		})
+	}
+	get title(){
+		if (this.unit === undefined) return "Gain";
+		if (this.unit.selected_unit == 'V/V') return "Voltage Gain";
+		if (this.unit.selected_unit == 'W/W') return "Power Gain";
+		return "Gain";
+	}
 }
 
 export class SysColumnElementNoiseTemperature extends SysColumnElementCalculated{
@@ -49,9 +55,46 @@ export class SysColumnElementNoiseTemperature extends SysColumnElementCalculated
 	static key = 'noise_temperature';
 }
 
+export class SysColumnElementNoiseFigureActual extends SysColumnElementCalculated{
+	static unit = ColumnUnitGain;
+	static key = 'noise_figure_physical';
+	create_unit(container){
+		super.create_unit(container);
+		this.unit.addEventListener('change', () => {
+			this.update_header();
+		})
+	}
+	get title(){
+		if (this.unit === undefined) return "Noise Figure Actual";
+		if (this.unit.selected_unit == 'dB') return "Noise Figure Actual";
+		return "Noise Factor Actual";
+	}
+}
+
+export class SysColumnElementDeviceTemperature extends SysColumnElementCalculated{
+	static title = 'Device Temperature';
+	static unit = ColumnUnitTemperature;
+	static key = 'physical_temperature';
+}
+
+export class SysColumnElementDeviceOP1dB extends SysColumnElementCalculated{
+	static title = 'OP1dB';
+	static unit = ColumnUnitPower;
+	static key = 'op1db';
+}
+
+export class SysColumnElementDeviceIP1dB extends SysColumnElementCalculated{
+	static title = 'IP1dB';
+	static unit = ColumnUnitPower;
+	static key = 'ip1db';
+}
+
 
 export const ColumnEleCalc = [
 	SysColumnElementLinearPowerGain,
-	SysColumnElementNoiseFactor,
+	SysColumnElementDeviceIP1dB,
+	SysColumnElementDeviceOP1dB,
 	SysColumnElementNoiseTemperature,
+	SysColumnElementNoiseFigureActual,
+	SysColumnElementDeviceTemperature,
 ]

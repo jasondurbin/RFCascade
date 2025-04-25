@@ -5,8 +5,8 @@
  * @import {ColumnSysAutoHint, KeySysAutoHint} from "./columns/columns-sys-auto.js"
  * @import {ColumnSysCalcHint, KeySysCalcHint} from "./columns/columns-sys-calc.js"
  *
- * @typedef {ColumnEleAttrHint | ColumnEleCalcHint | ColumnEleInputHint | ColumnSysAutoHint | ColumnSysCalcHint | ColumnSysConvHint} SysColumnHint
- * @typedef {KeyEleCalcHint | KeyEleInputHint | KeySysAutoHint | KeySysCalcHint | KeyEleAttrHint | KeySysConvHint} KeyHintAny
+ * @typedef {(ColumnEleAttrHint | ColumnEleCalcHint | ColumnEleInputHint | ColumnSysAutoHint | ColumnSysCalcHint)} SysColumnHint
+ * @typedef {(KeyEleCalcHint | KeyEleInputHint | KeySysAutoHint | KeySysCalcHint | KeyEleAttrHint | KeySysConvHint)} KeyHintAny
  */
 
 import {ColumnEleAttr} from "./columns/columns-ele-attr.js"

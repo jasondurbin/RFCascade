@@ -142,7 +142,6 @@ select{
 	border: 1px solid var(--grid-color);
 	text-align: center;
 	padding: 2px;
-	min-width: 100px;
 	vertical-align: bottom;
 }
 .system-table td{
@@ -150,7 +149,22 @@ select{
 	min-width: 100px;
 	padding: 2px;
 }
+.system-table .td-index,
+.system-table .td-up,
+.system-table .td-down{
+	min-width: 0px;
+	text-align: center;
+	padding: 0px 4px;
+}
 .system-table td input{
 	max-width: 100px;
 	box-sizing: border-box;
+}
+.system-table td input[disabled="true"]{
+	background-color: transparent;
+	border: none;
+}
+#sys-container{
+	overflow-x: auto;
+	padding: 10px 0;
 }
