@@ -11,6 +11,8 @@ export class SysColumnABC{
 	}
 	static save_key = null;
 	static input_type = null;
+	static plottable = true;
+	static position_fixed = false;
 	/**
 	 * Column constructor
 	 *
@@ -22,6 +24,8 @@ export class SysColumnABC{
 		this.required = this.constructor.defaults['required'];
 		this._reformatWaiting = false
 	}
+	get plottable(){ return this.constructor.plottable; }
+	get position_fixed(){ return this.constructor.position_fixed; }
 	get reformatWaiting(){
 		if (!this.visible) return false;
 		if (this.unit !== null && this.unit.changed) return true;
@@ -39,7 +43,7 @@ export class SysColumnABC{
 		if (itype === null) throw Error("Missing type.");
 		let v = block.get_parameter(this.key);
 		if (itype == 'number') v = Number(v);
-		else if (itype == 'text'){}
+		else if (itype == 'text' || itype == 'color'){}
 		else if (Array.isArray(itype)){
 			let vi = -1;
 			for (let i = 0; i < itype.length; i++){
@@ -64,7 +68,7 @@ export class SysColumnABC{
 		if (v === undefined || v === null) return [null, null];
 
 		if (itype == 'number') v = Number(v);
-		else if (itype == 'text'){}
+		else if (itype == 'text' || itype == 'color'){}
 		else if (Array.isArray(itype)){
 			v = Number(v);
 			if (v < 0 || v >= itype.length) return [null, null];
@@ -82,8 +86,16 @@ export class SysColumnABC{
 		this.header = header;
 		this.update_header();
 	}
-	update_header(){this.header.innerHTML = this.title}
+	update_header(){ this.header.innerHTML = this.title; }
 	get title(){ return this.constructor.title; }
+	get label(){
+		if (this.unit === null){
+			const unit = this.constructor.unit;
+			if (unit == null || unit == undefined || unit == '') return this.title;
+			return `${this.title} (${unit})`
+		}
+		return `${this.title} (${this.unit.selected_unit})`;
+	}
 	/**
 	 * Create unit for column.
 	 *
@@ -99,6 +111,7 @@ export class SysColumnABC{
 			this.unit = new unit(this);
 			const ele = this.unit.build();
 			container.appendChild(ele);
+			ele.setAttribute('id', this.parent.prepend + "-" + this.parameter_key + "-unit")
 		}
 	}
 	/**
@@ -125,8 +138,15 @@ export class SysColumnABC{
 	 * */
 	reformat(block){
 		if (!this.visible) return;
-		const value = block.get_parameter(this.parameter_key);
-		block.cell(this.parameter_key).innerHTML = this.convert(value);
+		block.cell(this.parameter_key).innerHTML = this.value(block);
 		this._reformatWaiting = false;
+	}
+	/**
+	 * Get block's value from column.
+	 *
+	 * @param {BlockHint} block
+	 * */
+	value(block){
+		return this.convert(block.get_parameter(this.parameter_key))
 	}
 }

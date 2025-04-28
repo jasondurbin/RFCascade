@@ -1,4 +1,3 @@
-
 import {linspace} from "../../util.js";
 import {ScenePlotABC} from "../scene-plot-abc.js"
 
@@ -11,11 +10,13 @@ export class ScenePlot1D extends ScenePlotABC{
 		canvas.height = canvas.height*this.scale;
 		const pe = canvas.parentElement.parentElement;
 		this.legend = pe.querySelector(".canvas-legend");
+		if (this.legend !== null){
+			this.legend.addEventListener('click', (e) => {
+				e.target.classList.toggle('disabled');
+				this.redrawWaiting = true;
+			});
+		}
 
-		this.legend.addEventListener('click', (e) => {
-			e.target.classList.toggle('disabled');
-			this.redrawWaiting = true;
-		});
 		const _draw_frame = () => {
 			const rd = this.redrawWaiting || cmap.changed;
 			if (rd && this.xGrid !== undefined){
@@ -55,12 +56,15 @@ export class ScenePlot1D extends ScenePlotABC{
 	set_ygrid(start, stop, count){ this.yGrid = linspace(start, stop, count); }
 	set_xgrid_points(points){ this.xpoints = Number(points); }
 	set_ygrid_points(points){ this.ypoints = Number(points); }
-	add_data(x, y, item){
+	add_data(x, y, item, config){
 		this.redrawWaiting = true;
+		if (config === undefined) config = {};
+		if (item === null) item = undefined;
 		this._data.push({
 			'x': x,
 			'y': y,
 			'item': item,
+			'markers': config['markers'] || false,
 		});
 		return this._data.length - 1;
 	}
@@ -82,7 +86,7 @@ export class ScenePlot1D extends ScenePlotABC{
 
 		this.config = {}
 		if (this.yGrid !== undefined){
-			const ctx = this._create_context();
+			const ctx = this.create_context();
 			let mx = 0.0
 			for (let i = 0; i < this.yGrid.length; i++){
 				let mt = ctx.measureText(this.yGrid[i].toFixed(this.ypoints).toString());
@@ -105,15 +109,17 @@ export class ScenePlot1D extends ScenePlotABC{
 		return this.cmap.cmap()(i)
 	}
 	draw_data(){
-		const ctx = this._create_context();
+		const ctx = this.create_context();
 		const minX = this.xGrid[0];
 		const maxX = this.xGrid[this.xGrid.length - 1];
 		const minY = this.yGrid[0];
 		const maxY = this.yGrid[this.yGrid.length - 1];
 		const cm = this.cmap.cmap();
+		const mw = this.cGridLineWidth*5;
+
 		ctx.lineWidth = this.cDataLineWidth;
 
-		ctx.beginPath();
+		ctx.save();
 		ctx.rect(
 			this._xcBounds[0],
 			this._ycBounds[0],
@@ -130,25 +136,55 @@ export class ScenePlot1D extends ScenePlotABC{
 		}
 		this.cmap.changed = false;
 		for (let i = 0; i < this._data.length; i++){
+			const isValid = [false];
 			const e = this._data[i];
 			const item = e['item'];
 			const c = cm(i);
 			ctx.strokeStyle = c;
-			item.style.color = c;
-			if (item.classList.contains('disabled')) continue
+			ctx.fillStyle = c;
+			if (item !== undefined){
+				item.style.color = c;
+				if (item.classList.contains('disabled')) continue
+			}
 			const x = e['x'];
 			const y = e['y'];
+			const sm = e['markers'];
 			ctx.beginPath();
+
+			let first = true;
+			let ix = null;
+			let iy = null;
 			for (let j = 0; j < x.length; j++){
-				const ix = _x(x[j]);
-				const iy = _y(y[j]);
-				if (j == 0) ctx.moveTo(ix, iy);
-				else ctx.lineTo(ix, iy)
+				const xx = x[j];
+				const yy = y[j];
+				const iv = isFinite(xx) && !isNaN(xx) && isFinite(yy) && !isNaN(yy);
+				isValid.push(iv);
+				if (iv){
+					ix = _x(xx);
+					iy = _y(yy);
+					if (first){
+						ctx.moveTo(ix, iy);
+						first = false;
+					}
+					else ctx.lineTo(ix, iy);
+				}
+				else first = true;
 			}
 			ctx.stroke();
+			isValid.push(false);
+			for (let j = 0; j < x.length; j++){
+				if (!sm){
+					if (!isValid[j + 1]) continue;
+					if (isValid[j] || isValid[j + 2]) continue;
+				}
+				ctx.beginPath();
+				ctx.arc(_x(x[j]), _y(y[j]), mw, 0, 2*Math.PI);
+				ctx.fill();
+			}
 		}
+		ctx.restore();
 	}
-	_create_context(){
+	create_context(){
 		const style = window.getComputedStyle(document.body);
 		const ctx = this.canvas.getContext('2d');
 		ctx.strokeStyle = style.getPropertyValue('--grid-color');
@@ -158,7 +194,7 @@ export class ScenePlot1D extends ScenePlotABC{
 		return ctx;
 	}
 	draw_outline(){
-		const ctx = this._create_context();
+		const ctx = this.create_context();
 		ctx.beginPath();
 		ctx.moveTo(this._xcBounds[0], this._ycBounds[0]);
 		ctx.lineTo(this._xcBounds[0], this._ycBounds[1]);
@@ -168,7 +204,7 @@ export class ScenePlot1D extends ScenePlotABC{
 		ctx.stroke();
 	}
 	draw_ygrid(){
-		const ctx = this._create_context();
+		const ctx = this.create_context();
 		const count = this.yGrid.length;
 		const sect = linspace(this._ycBounds[0], this._ycBounds[1], count);
 		const maxX = this._xcBounds[1];
@@ -201,7 +237,7 @@ export class ScenePlot1D extends ScenePlotABC{
 		ctx.restore();
 	}
 	draw_xgrid(){
-		const ctx = this._create_context();
+		const ctx = this.create_context();
 		const count = this.xGrid.length;
 		const sect = linspace(this._xcBounds[0], this._xcBounds[1], count);
 		const maxY = this._ycBounds[1];

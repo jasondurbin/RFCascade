@@ -34,6 +34,7 @@ export class SysBlockABC{
 	 * @param {Object} pars
 	 * */
 	constructor(parent, pars){
+		if (pars === undefined) pars = {};
 		this.index = 0;
 		this.parent = parent;
 		this.cells = {};
@@ -41,6 +42,9 @@ export class SysBlockABC{
 		this.cascpars = {};
 		this.inputs = {};
 		this.enabled = true;
+		this.color = pars['color'] || "#FF0000";
+		this.icon_canvas = null;
+		this.listeners = {};
 	}
 	/**
 	 * Retrieve a parameter from a block.
@@ -48,7 +52,9 @@ export class SysBlockABC{
 	 * @param {KeyHintAny} key
 	 * @param {HTMLInputElement} input
 	 * */
-	map_input(key, input){ this.inputs[key] = input; }
+	map_input(key, input){
+		this.inputs[key] = input;
+	}
 	process_inputs(){
 		for (const [key, input] of Object.entries(this.inputs)){
 			let v = input.value;
@@ -57,6 +63,8 @@ export class SysBlockABC{
 		}
 		let lshow = this.linearity == 'Ignore' ? 'none': 'inline';
 		this.inputs['p1db'].style.display = lshow;
+
+		if (this.icon_canvas !== null) this.draw_element_icon(this.icon_canvas);
 	}
 	map_cell(key, td){ this.cells[key] = td; }
 	cell(key){ return this.cells[key]; }
@@ -118,6 +126,20 @@ export class SysBlockABC{
 		this.cascpars = {};
 	}
 	add_cascade_parameter(key, value){ this.cascpars[key] = value; }
+	/**
+	 * Draw element's icon.
+	 *
+	 * @param {HTMLCanvasElement} canvas
+	 * */
+	draw_element_icon(canvas){
+		const w = 50;
+		const ctx = canvas.getContext('2d');
+		canvas.width = w;
+		canvas.height = w;
+		ctx.lineWidth = 1/25;
+		ctx.scale(w, w);
+		this.draw_icon(ctx);
+	}
 }
 export class SysBlockAmplifier extends SysBlockABC{
 	static title = 'Amplifier';
@@ -129,6 +151,30 @@ export class SysBlockAmplifier extends SysBlockABC{
 		this.part_number = pars['part_number'] || "Test Amp";
 		this.p1db = pars['p1db'] || 10;
 		this.linearity = "Output Referred";
+	}
+	/**
+	 * Draw element's icon.
+	 *
+	 * @param {RenderingContext} ctx
+	 * */
+	draw_icon(ctx){
+		ctx.strokeStyle = this.get_parameter('color');
+		const mg = 0.2;
+		ctx.beginPath();
+		ctx.moveTo(0.0, 0.5);
+		ctx.lineTo(mg, 0.5);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(mg, mg);
+		ctx.lineTo(1.0-mg, 0.5);
+		ctx.lineTo(mg, 1.0-mg);
+		ctx.lineTo(mg, mg);
+		ctx.stroke();
+
+		ctx.beginPath();
+		ctx.moveTo(1.0-mg, 0.5);
+		ctx.lineTo(1.0, 0.5);
+		ctx.stroke();
 	}
 }
 
@@ -150,6 +196,33 @@ export class SysBlockPassive extends SysBlockABC{
 	map_input(key, input){
 		super.map_input(key, input);
 		if (key == 'noise_figure') input.setAttribute('disabled', true);
+	}
+	/**
+	 * Draw element's icon.
+	 *
+	 * @param {RenderingContext} ctx
+	 * */
+	draw_icon(ctx){
+		ctx.strokeStyle = this.get_parameter('color');
+		const mg = 0.2;
+		const h = 0.2
+		ctx.beginPath();
+		ctx.moveTo(0.0, 0.5);
+		ctx.lineTo(mg, 0.5);
+		ctx.stroke();
+
+		ctx.beginPath();
+		ctx.moveTo(mg, 0.5+h/2);
+		ctx.lineTo(mg, 0.5-h/2);
+		ctx.lineTo(1.0-mg, 0.5-h/2);
+		ctx.lineTo(1.0-mg, 0.5+h/2);
+		ctx.lineTo(mg, 0.5+h/2);
+		ctx.stroke();
+
+		ctx.beginPath();
+		ctx.moveTo(1.0-mg, 0.5);
+		ctx.lineTo(1.0, 0.5);
+		ctx.stroke();
 	}
 }
 

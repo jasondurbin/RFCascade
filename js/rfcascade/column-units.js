@@ -39,8 +39,6 @@ export class ColumnUnitABC{
 	}
 	/**
 	 * Build the unit dropdown.
-	 *
-	 * @returns {HTMLSelectElement} container
 	 * */
 	build(){
 		const sel = document.createElement('select');
@@ -131,7 +129,7 @@ export class ColumnUnitPowerGain extends ColumnUnitABC{
 export class ColumnUnitGain extends ColumnUnitABC{
 	static baseUnit = 'dB';
 	static unit_definitions = {
-		'(unitless)': (v) => v,
+		'unitless': (v) => v,
 		'dB': (v) => 10*Math.log10(v),
 	}
 	get allowEngineeringNotation(){ return true; }
