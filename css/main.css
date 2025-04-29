@@ -1,6 +1,6 @@
 :root{
-	--bg-color-dark: #121212;
-	--text-color-dark: #AAA;
+	--bg-color-dark: #030d0b;
+	--text-color-dark: #e7f9f4;
 	--grid-color-dark: #CCC;
 	--canvas-border-color-dark: #000;
 	--settings-border-color-dark: #666666;
@@ -14,9 +14,13 @@
 	--error-banner-border-dark: #9C1010;
 	--error-banner-background-dark: #F76565;
 	--error-banner-text-dark: #FFF;
+	--td-device-output-background-dark: #2f1967;
+	--td-input-background-dark: #2fc195;
+	--td-system-output-background-dark: #7c2494;
+	--td-system-auto-background-dark: #7c2494;
 
-	--bg-color-light: #FFFFFF;
-	--text-color-light: #333;
+	--bg-color-light: #f1fcfa;
+	--text-color-light: #061813;
 	--input-bg-color-light: #FFFFFF;
 	--input-border-color-light: #cccccc;
 	--canvas-border-color-light: #222;
@@ -30,6 +34,10 @@
 	--error-banner-border-light: #9C1010;
 	--error-banner-background-light: #F76565;
 	--error-banner-text-light: #FFF;
+	--td-device-output-background-light: #ae98e6;
+	--td-input-background-light: #3dd0a4;
+	--td-system-output-background-light: #c36bdb;
+	--td-system-auto-background-light: #c36bdb;
 }
 :root.dark{
 	--bg-color: var(--bg-color-dark);
@@ -47,6 +55,10 @@
 	--error-banner-border: var(--error-banner-border-dark);
 	--error-banner-background: var(--error-banner-background-dark);
 	--error-banner-text: var(--error-banner-text-dark);
+	--td-device-output-background: var(--td-device-output-background-dark);
+	--td-input-background: var(--td-input-background-dark);
+	--td-system-output-background: var(--td-system-output-background-dark);
+	--td-system-auto-background: var(--td-system-auto-background-dark);
 }
 :root.light{
 	--bg-color: var(--bg-color-light);
@@ -64,6 +76,10 @@
 	--error-banner-border: var(--error-banner-border-light);
 	--error-banner-background: var(--error-banner-background-light);
 	--error-banner-text: var(--error-banner-text-light);
+	--td-device-output-background: var(--td-device-output-background-light);
+	--td-input-background: var(--td-input-background-light);
+	--td-system-output-background: var(--td-system-output-background-light);
+	--td-system-auto-background: var(--td-system-auto-background-light);
 }
 @media (prefers-color-scheme: dark){
 	:root.auto{
@@ -82,6 +98,10 @@
 		--error-banner-border: var(--error-banner-border-dark);
 		--error-banner-background: var(--error-banner-background-dark);
 		--error-banner-text: var(--error-banner-text-dark);
+		--td-device-output-background: var(--td-device-output-background-dark);
+		--td-input-background: var(--td-input-background-dark);
+		--td-system-output-background: var(--td-system-output-background-dark);
+		--td-system-auto-background: var(--td-system-auto-background-dark);
 	}
 }
 @media (prefers-color-scheme: light){
@@ -101,6 +121,10 @@
 		--error-banner-border: var(--error-banner-border-light);
 		--error-banner-background: var(--error-banner-background-light);
 		--error-banner-text: var(--error-banner-text-light);
+		--td-device-output-background: var(--td-device-output-background-light);
+		--td-input-background: var(--td-input-background-light);
+		--td-system-output-background: var(--td-system-output-background-light);
+		--td-system-auto-background: var(--td-system-auto-background-light);
 	}
 }
 body{
@@ -118,6 +142,7 @@ body{
 a{
 	color: var(--link-color);
 	text-decoration: none;
+	transition: 0.3s;
 }
 a:hover{
 	text-decoration: underline;
@@ -147,6 +172,7 @@ select{
 	color: var(--text-color);
 	border: 1px solid var(--input-border-color);
 	padding: 4px;
+	transition: 0.3s;
 }
 .container-full{
 	width: 100%;
@@ -175,6 +201,18 @@ select{
 	text-align: center;
 	padding: 0px 4px;
 	vertical-align: middle;
+}
+.system-table .td-device-output{
+	background-color: var(--td-device-output-background);
+}
+.system-table .td-input{
+	background-color: var(--td-input-background);
+}
+.system-table .td-system-output{
+	background-color: var(--td-system-output-background);
+}
+.system-table .td-system-auto{
+	background-color: var(--td-system-auto-background);
 }
 .system-plot h2{
 	margin: 0;
@@ -212,6 +250,9 @@ input[type='color']{
 }
 .td-header-button{
 	text-align: center;
+}
+.td-hidden{
+	display: none;
 }
 .td-header-button button,
 .td-side-button button{
