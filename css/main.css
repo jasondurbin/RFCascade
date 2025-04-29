@@ -176,11 +176,11 @@ select{
 	padding: 0px 4px;
 	vertical-align: middle;
 }
-.sys-plot h2{
+.system-plot h2{
 	margin: 0;
 	text-align: center;
 }
-.sys-plot canvas{
+.system-plot canvas{
 	border: 1px solid var(--canvas-border-color);
 	box-shadow: 3px 3px var(--shadow);
 	box-sizing: border-box;
