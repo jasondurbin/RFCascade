@@ -1,5 +1,5 @@
 /**
- * @typedef {SysBlockAmplifier | SysBlockPassive} BlockHint
+ * @typedef {SysBlockAmplifier | SysBlockPassive | SysBlockNode} BlockHint
  * @import {SceneControlSystemCalc} from "../index.js"
  * @import {KeyHintAny} from "./columns.js"
  */
@@ -27,6 +27,10 @@ export class SysCalculationNode{
 }
 
 export class SysBlockABC{
+	static is_node = false;
+	static default_pars = {
+		'color': "#000",
+	};
 	/**
 	 * Create a new system block.
 	 *
@@ -35,6 +39,11 @@ export class SysBlockABC{
 	 * */
 	constructor(parent, pars){
 		if (pars === undefined) pars = {};
+
+		for(const [k, v] of Object.entries(this.constructor.default_pars)){
+			if (pars.hasOwnProperty(k)) this[k] = pars[k];
+			else this[k] = v;
+		}
 		this.index = 0;
 		this.parent = parent;
 		this.cells = {};
@@ -42,10 +51,10 @@ export class SysBlockABC{
 		this.cascpars = {};
 		this.inputs = {};
 		this.enabled = true;
-		this.color = pars['color'] || "#FF0000";
 		this.icon_canvas = null;
 		this.listeners = {};
 	}
+	get is_node(){ return this.constructor.is_node; }
 	/**
 	 * Retrieve a parameter from a block.
 	 *
@@ -141,16 +150,29 @@ export class SysBlockABC{
 		this.draw_icon(ctx);
 	}
 }
+export class SysBlockNode extends SysBlockABC{
+	static title = 'Node';
+	static is_node = true;
+	static default_pars = {
+		...SysBlockABC.default_pars,
+		'gain': 0.0,
+		'noise_figure': 0.0,
+		'part_number': "[]",
+		'p1db': Infinity,
+		'linearity': "Ignore",
+	}
+	process_inputs(){}
+}
+
 export class SysBlockAmplifier extends SysBlockABC{
 	static title = 'Amplifier';
-	constructor(parent, pars){
-		super(parent, pars);
-		if (pars === undefined) pars = {};
-		this.gain = pars['gain'] || 13;
-		this.noise_figure = pars['noise_figure'] || 5;
-		this.part_number = pars['part_number'] || "Test Amp";
-		this.p1db = pars['p1db'] || 10;
-		this.linearity = "Output Referred";
+	static default_pars = {
+		...SysBlockABC.default_pars,
+		'gain': 13,
+		'noise_figure': 5,
+		'part_number': "Amp",
+		'p1db': 10,
+		'linearity': "Output Referred",
 	}
 	/**
 	 * Draw element's icon.
@@ -180,14 +202,13 @@ export class SysBlockAmplifier extends SysBlockABC{
 
 export class SysBlockPassive extends SysBlockABC{
 	static title = 'Passive';
-	constructor(parent, pars){
-		super(parent, pars);
-		if (pars === undefined) pars = {};
-		this.gain = pars['gain'] || -1;
-		this.noise_figure = Math.abs(this.gain);
-		this.part_number = pars['part_number'] || "Test Passive";
-		this.p1db = pars['p1db'] || 10;
-		this.linearity = "Ignore";
+	static default_pars = {
+		...SysBlockABC.default_pars,
+		'gain': -1,
+		'noise_figure': 1,
+		'part_number': "Passive",
+		'p1db': 10,
+		'linearity': "Ignore",
 	}
 	process_inputs(){
 		this.inputs['noise_figure'].value = Math.abs(this.inputs['gain'].value);

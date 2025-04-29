@@ -1,9 +1,10 @@
 import {SceneTheme, FindSceneURL} from "./scene/scene-util.js";
 import {SceneParent} from "./scene/scene-abc.js"
+import {SceneBannerError} from "./scene/scene-banners.js"
 import {SceneSystemGlobals, SceneSystemPlot} from "./index-scenes.js"
 import {SysColumns} from "./rfcascade/columns.js"
-import {SysBlockAmplifier, SysBlockPassive, SysCalculationNode, SysBlocks} from "./rfcascade/blocks.js"
-import {save_blocks, load_blocks} from "./rfcascade/blocks-url.js"
+import {SysBlockAmplifier, SysBlockPassive, SysCalculationNode, SysBlocks, SysBlockNode} from "./rfcascade/blocks.js"
+import {save_system, load_system} from "./rfcascade/system-url.js"
 import {find_colormap} from "./cmap/cmap-listed.js"
 /**
  * @import { BlockHint } from "./rfcascade/blocks.js"
@@ -30,6 +31,12 @@ export class SceneControlSystemCalc extends SceneParent{
 		this.globals = SceneSystemGlobals.build(this);
 		this.cmap = find_colormap('Vibrant');
 
+		this.urlBanner = new SceneBannerError();
+		this.urlBanner.text = "The URL created when saving the data exceeds 2000 characters. This will become a problem when sharing or saving. You could potentially reduce the size by removing part numbers or removing elements."
+		this.urlBanner.hide();
+		const url = FindSceneURL();
+		url.add_url_warning(this.urlBanner);
+
 		const cont = this.find_element('container');
 		const div = document.createElement('div');
 
@@ -40,8 +47,24 @@ export class SceneControlSystemCalc extends SceneParent{
 		this.table.classList = 'system-table';
 		div.appendChild(this.table);
 
+		const _reset_columns = () => {
+			this.columns = Array.from(this.calc_columns);
+			this.columns.forEach((c) => { c.load_defaults(); })
+		}
+
 		this.find_element('reset').addEventListener('click', () => {
 			this.blocks = this.create_default_blocks();
+			_reset_columns();
+			this.redraw_scene();
+		})
+		this.find_element('reset-columns').addEventListener('click', () => {
+			_reset_columns();
+			this.redraw_scene();
+		})
+		this.find_element('reset-colors').addEventListener('click', () => {
+			for (let i = 0; i < this.blocks.length; i++){
+				this.blocks[i].color = this.cmap(i);
+			}
 			this.redraw_scene();
 		})
 		const sel = this.find_element('add-type-selection');
@@ -60,7 +83,8 @@ export class SceneControlSystemCalc extends SceneParent{
 		})
 
 		/** @type {Array<SysColumnHint>} */
-		this.columns = Array.from(SysColumns, (c) => new c(this));
+		this.calc_columns = Array.from(SysColumns, (c) => new c(this));
+		this.columns = Array.from(this.calc_columns);
 
 		this.pcounter = 1;
 		this.plots = []
@@ -68,12 +92,9 @@ export class SceneControlSystemCalc extends SceneParent{
 			this.add_plot(e);
 		});
 
-		const url = FindSceneURL();
-		let blocks = load_blocks(this, url.get_param('blocks'));
-		if (blocks !== null && blocks.length != 0) this.blocks = blocks;
-		else this.blocks = this.create_default_blocks();
+		this.output = new SysBlockNode(this);
+		load_system(this);
 		this.redraw_scene();
-
 	}
 	add_plot(container){
 		this.plots.push(new SceneSystemPlot(this, container, this.pcounter));
@@ -94,6 +115,7 @@ export class SceneControlSystemCalc extends SceneParent{
 			this.add_row(b, counter);
 			counter++;
 		});
+		this.add_row(this.output, counter);
 		this.updateWaiting = true;
 		this.calculate();
 	}
@@ -173,18 +195,38 @@ export class SceneControlSystemCalc extends SceneParent{
 			const td = document.createElement('td');
 			obj.map_cell(r.parameter_key, td);
 			td.classList = this.class_list(r);
+			tr.appendChild(td);
+			if (obj.is_node) return;
 			if (dtype == 'attribute') td.innerHTML = obj.get_parameter(r.parameter_key);
-			else if (dtype == 'up'){
-				const but = document.createElement('button');
-				but.innerHTML = "Move Up";
-				but.addEventListener('click', () => { this.move_block(obj, -1); });
-				td.appendChild(but);
+			else if (dtype == 'move'){
+				const but1 = document.createElement('button');
+				const but2 = document.createElement('button');
+				td.classList.add("td-side-button")
+				but1.addEventListener('click', () => { this.move_block(obj, -1); });
+				but1.classList = "button-side-up";
+				but1.title = "Move item up."
+				but2.addEventListener('click', () => { this.move_block(obj, 1); });
+				but2.classList = "button-side-down";
+				but2.title = "Move item down."
+				td.appendChild(but1);
+				td.appendChild(document.createElement('br'));
+				td.appendChild(but2);
 			}
-			else if (dtype == 'down'){
-				const but = document.createElement('button');
-				but.innerHTML = "Move Down";
-				but.addEventListener('click', () => { this.move_block(obj, 1); });
-				td.appendChild(but);
+			else if (dtype == 'remove'){
+				const but1 = document.createElement('button');
+				td.classList.add("td-side-button")
+				but1.addEventListener('click', () => {
+					const blks = Array.from(this.blocks);
+					this.blocks = [];
+					blks.forEach((b) => {
+						if (b == obj) return;
+						this.blocks.push(b);
+					})
+					this.redraw_scene();
+				});
+				but1.classList = "button-side-remove";
+				but1.title = "Remove block."
+				td.appendChild(but1);
 			}
 			else if (dtype == 'icon'){
 				const canvas = document.createElement('canvas');
@@ -224,7 +266,6 @@ export class SceneControlSystemCalc extends SceneParent{
 				// ignore because this is updated when calculation is complete.
 			}
 			else throw Error(`Unknown column type ${dtype}.`);
-			tr.appendChild(td);
 		});
 		this.table.appendChild(tr);
 	}
@@ -271,10 +312,24 @@ export class SceneControlSystemCalc extends SceneParent{
 				but1.classList = "button-header-left button-header";
 				but3.classList = "button-header-hide button-header";
 				but2.classList = "button-header-right button-header";
+				but1.title = "Move column left."
+				but2.title = "Move column right."
+				but3.title = "Hide column from view."
 				td3.appendChild(but1);
 				td3.appendChild(but3);
 				td3.appendChild(but2);
 			}
+		});
+	}
+	add_footer(){
+		const tr1 = document.createElement('tr');
+		this.table.appendChild(tr1);
+		this.columns.forEach((r) => {
+			if (!r.visible) return;
+			const td1 = document.createElement('td');
+			tr1.appendChild(td1);
+			const cl = this.class_list(r);
+			td1.classList = cl;
 		});
 	}
 	calculate(){
@@ -283,26 +338,28 @@ export class SceneControlSystemCalc extends SceneParent{
 		const _calculate = () => {
 			let replot = false;
 			if (this.updateWaiting){
-				const url = FindSceneURL();
 
-				this.blocks.forEach((b) => {
+				const blocks = Array.from(this.blocks);
+				blocks.push(this.output);
+
+				blocks.forEach((b) => {
 					b.process_inputs();
 					b.reset_parameters();
 				});
-				url.set_param('blocks', save_blocks(this.blocks));
+				save_system(this);
 
 				const node = new SysCalculationNode(this);
-				this.blocks.forEach((b) => {
+				blocks.forEach((b) => {
 					if (!b.enabled) return;
-					this.columns.forEach((c) => {
+					this.calc_columns.forEach((c) => {
 						if (c.column_type == 'device-output' && (c.visible || c.required)){
 							c.calculate_element(node, b);
 						}
 					});
-					this.columns.forEach((c) => {
+					this.calc_columns.forEach((c) => {
 						if (c.column_type == 'system-output' && (c.visible || c.required)) c.calculate_element(node, b);
 					});
-					this.columns.forEach((c) => {
+					this.calc_columns.forEach((c) => {
 						if (c.column_type == 'system-auto' && (c.visible || c.required)) c.calculate_element(node, b);
 					});
 				});
@@ -314,6 +371,7 @@ export class SceneControlSystemCalc extends SceneParent{
 					this.blocks.forEach((b) => {
 						c.reformat(b);
 					});
+					c.reformat(this.output);
 					replot = true;
 				}
 			});

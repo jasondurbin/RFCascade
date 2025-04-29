@@ -2,9 +2,9 @@
  * @typedef {(
  * 	 SysColumnElementType
  * | SysColumnElementItem
- * | SysColumnElementUp
- * | SysColumnElementDown
+ * | SysColumnElementMove
  * | SysColumnElementIcon
+ * | SysColumnElementDelete
  * )} ColumnEleAttrHint
  *
  * @typedef {'title' | 'index'} KeyEleAttrHint
@@ -32,16 +32,15 @@ export class SysColumnElementItem extends SysColumnElementAttr{
 	static uindex = 2;
 }
 
-export class SysColumnElementUp extends SysColumnElementAttr{
-	static type = 'up';
+export class SysColumnElementMove extends SysColumnElementAttr{
+	static type = 'move';
 	static title = '';
 	static unit = null;
 	static key = null;
 	static uindex = 3;
 }
-
-export class SysColumnElementDown extends SysColumnElementAttr{
-	static type = 'down';
+export class SysColumnElementDelete extends SysColumnElementAttr{
+	static type = 'remove';
 	static title = '';
 	static unit = null;
 	static key = null;
@@ -57,8 +56,8 @@ export class SysColumnElementIcon extends SysColumnElementAttr{
 }
 
 export const ColumnEleAttr = [
-	SysColumnElementUp,
-	SysColumnElementDown,
+	SysColumnElementDelete,
+	SysColumnElementMove,
 	SysColumnElementItem,
 	SysColumnElementIcon,
 	SysColumnElementType,

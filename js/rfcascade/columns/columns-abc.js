@@ -13,6 +13,7 @@ export class SysColumnABC{
 	static input_type = null;
 	static plottable = true;
 	static position_fixed = false;
+	static cascade = false;
 	/**
 	 * Column constructor
 	 *
@@ -26,10 +27,16 @@ export class SysColumnABC{
 	}
 	get plottable(){ return this.constructor.plottable; }
 	get position_fixed(){ return this.constructor.position_fixed; }
+	get is_cascaded(){ return this.constructor.cascade; }
 	get reformatWaiting(){
 		if (!this.visible) return false;
 		if (this.unit !== null && this.unit.changed) return true;
 		return this._reformatWaiting;
+	}
+	load_defaults(){
+		for (const [k, v] of Object.entries(this.constructor.defaults)){
+			this[k] = v;
+		}
 	}
 	/**
 	 * Convert block to saveable parameter.
@@ -130,7 +137,10 @@ export class SysColumnABC{
 	}
 	get parameter_key(){ return this.constructor.key; }
 	get column_type(){ return this.constructor.type; }
-	update(block, value){ this._reformatWaiting = true; }
+	update(block, value){
+		if (block.is_node) return;
+		this._reformatWaiting = true;
+	}
 	/**
 	 * Reformat columns value.
 	 *
@@ -138,6 +148,7 @@ export class SysColumnABC{
 	 * */
 	reformat(block){
 		if (!this.visible) return;
+		if (block.is_node && !this.is_cascaded) return;
 		block.cell(this.parameter_key).innerHTML = this.value(block);
 		this._reformatWaiting = false;
 	}

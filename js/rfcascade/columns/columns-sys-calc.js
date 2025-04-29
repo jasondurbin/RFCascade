@@ -34,6 +34,7 @@ export class SysColumnSystemLinearSignalPowerOutIdeal extends SysColumnSystemOut
 	static unit = ColumnUnitPower;
 	static key = 'signal_power_out';
 	static uindex = 101;
+	static cascade = true;
 
 	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
 	calculate_element(node, block){
@@ -104,6 +105,7 @@ export class SysColumnSystemNoiseFigureCascaded extends SysColumnSystemOutput{
 	static unit = ColumnUnitGain;
 	static key = 'noise_figure_cascade';
 	static uindex = 105;
+	static cascade = true;
 
 	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
 	calculate_element(node, block){

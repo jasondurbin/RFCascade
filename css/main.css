@@ -11,6 +11,9 @@
 	--theme-bg-color-dark: #444;
 	--theme-color-dark: #EEE;
 	--shadow-dark: #000;
+	--error-banner-border-dark: #9C1010;
+	--error-banner-background-dark: #F76565;
+	--error-banner-text-dark: #FFF;
 
 	--bg-color-light: #FFFFFF;
 	--text-color-light: #333;
@@ -24,6 +27,9 @@
 	--theme-color-light: #333;
 	--shadow-light: #0003;
 	--grid-color-light: #555;
+	--error-banner-border-light: #9C1010;
+	--error-banner-background-light: #F76565;
+	--error-banner-text-light: #FFF;
 }
 :root.dark{
 	--bg-color: var(--bg-color-dark);
@@ -38,6 +44,9 @@
 	--theme-color: var(--theme-color-dark);
 	--shadow: var(--shadow-dark);
 	--grid-color: var(--grid-color-dark);
+	--error-banner-border: var(--error-banner-border-dark);
+	--error-banner-background: var(--error-banner-background-dark);
+	--error-banner-text: var(--error-banner-text-dark);
 }
 :root.light{
 	--bg-color: var(--bg-color-light);
@@ -52,6 +61,9 @@
 	--theme-color: var(--theme-color-light);
 	--shadow: var(--shadow-light);
 	--grid-color: var(--grid-color-light);
+	--error-banner-border: var(--error-banner-border-light);
+	--error-banner-background: var(--error-banner-background-light);
+	--error-banner-text: var(--error-banner-text-light);
 }
 @media (prefers-color-scheme: dark){
 	:root.auto{
@@ -67,6 +79,9 @@
 		--theme-color: var(--theme-color-dark);
 		--shadow: var(--shadow-dark);
 		--grid-color: var(--grid-color-dark);
+		--error-banner-border: var(--error-banner-border-dark);
+		--error-banner-background: var(--error-banner-background-dark);
+		--error-banner-text: var(--error-banner-text-dark);
 	}
 }
 @media (prefers-color-scheme: light){
@@ -83,6 +98,9 @@
 		--theme-color: var(--theme-color-light);
 		--shadow: var(--shadow-light);
 		--grid-color: var(--grid-color-light);
+		--error-banner-border: var(--error-banner-border-light);
+		--error-banner-background: var(--error-banner-background-light);
+		--error-banner-text: var(--error-banner-text-light);
 	}
 }
 body{
@@ -149,8 +167,8 @@ select{
 	padding: 2px;
 }
 .system-table td.td-index,
-.system-table td.td-up,
-.system-table td.td-down,
+.system-table td.td-move,
+.system-table td.td-remove,
 .system-table td.td-icon,
 .system-table td.td-color{
 	min-width: 0px;
@@ -195,7 +213,8 @@ input[type='color']{
 .td-header-button{
 	text-align: center;
 }
-.td-header-button button{
+.td-header-button button,
+.td-side-button button{
 	border: none;
 	cursor: pointer;
 	background-color: var(--text-color);
@@ -213,4 +232,24 @@ input[type='color']{
 }
 .button-header-right{
 	mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" stroke-width="2"><path d="M9 6l6 6l-6 6"></path></svg>');
+}
+.button-side-up{
+	mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" stroke-width="2"><path d="M6 15l6 -6l6 6"></path></svg>');
+}
+.button-side-down{
+	mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" stroke-width="2"><path d="M6 9l6 6l6 -6"></path></svg>');
+}
+.button-side-remove{
+	mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" stroke-width="2"><path d="M18 6l-12 12"></path><path d="M6 6l12 12"></path></svg>');
+}
+.scene-banner-error{
+	position: absolute;
+	top: 0px;
+	margin: 5px 10px;
+	max-width: 500px;
+	border: 1px solid var(--error-banner-border);
+	background-color: var(--error-banner-background);
+	color: var(--error-banner-text);
+	padding: 4px;
+	border-radius: 4px;
 }

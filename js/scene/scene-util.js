@@ -50,14 +50,23 @@ export class SceneURL{
 		this.url.search = this.url.searchParams;
 		this._known = []
 		this._needsUpdate = true;
+		this._banners = [];
 		const _url_checker = () => {
 			if (this._needsUpdate){
 				history.replaceState({}, null, this.url);
 				this._needsUpdate = false;
+				const v = window.location.href.length > 2000;
+				this._banners.forEach((b) => {
+					b.set_visible(v);
+				})
 			}
 			window.setTimeout(_url_checker, 200);
 		}
 		_url_checker();
+	}
+	add_url_warning(banner){
+		this._needsUpdate = true;
+		this._banners.push(banner);
 	}
 	/**
 	* Set a parameter's value for URL state.

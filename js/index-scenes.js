@@ -57,6 +57,7 @@ export class SceneSystemGlobals extends SceneControl{
 	}
 }
 
+
 const ICO_SIZE = 50;
 export class SceneSystemPlot extends ScenePlot1D{
 	/**
@@ -74,8 +75,6 @@ export class SceneSystemPlot extends ScenePlot1D{
 		const div2 = document.createElement('div')
 		const div3 = document.createElement('div');
 
-		const h = document.createElement('h2');
-
 		parent.columns.forEach((c) => {
 			if (!c.plottable) return;
 			const opt = document.createElement('option');
@@ -86,11 +85,9 @@ export class SceneSystemPlot extends ScenePlot1D{
 
 		chc.addEventListener('change', () => { this.draw(); });
 
-		h.innerHTML = 'Test';
 		chc.id = parent.prepend + "-" + pre + "-choice";
 		div1.class = "canvas-header";
 
-		div1.appendChild(h);
 		element.appendChild(div1);
 		element.appendChild(div2);
 		element.appendChild(div3);
