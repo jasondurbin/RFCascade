@@ -90,8 +90,8 @@ export class ColumnUnitABC{
 	 * @returns {Number}
 	 * */
 	convert(value){
-		if (value == Infinity || value == -Infinity) return Infinity;
 		if (this.changed) this.__converter = this.unitCallers[this.selected_unit];
+		if (value == Infinity || value == -Infinity) return Infinity;
 		return this.__converter(value);
 	}
 	config(){}
