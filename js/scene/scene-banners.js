@@ -1,4 +1,12 @@
+/** @import { SceneParent } from "./scene-abc.js" */
+
 export class SceneBanner{
+	/**
+	 * Create a new Scene Banner.
+	 *
+	 * @param {SceneParent} parent
+	 * @param {String} classList
+	 * */
 	constructor(parent, classList){
 		this.parent = parent;
 		this.div = document.createElement('div');

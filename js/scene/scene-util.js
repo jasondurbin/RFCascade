@@ -56,9 +56,7 @@ export class SceneURL{
 				history.replaceState({}, null, this.url);
 				this._needsUpdate = false;
 				const v = window.location.href.length > 2000;
-				this._banners.forEach((b) => {
-					b.set_visible(v);
-				})
+				this._banners.forEach((b) => { b.set_visible(v); })
 			}
 			window.setTimeout(_url_checker, 200);
 		}
