@@ -1,7 +1,15 @@
 import {linspace} from "../../util.js";
 import {ScenePlotABC} from "../scene-plot-abc.js"
+/** @import {SceneParent} from "../scene-abc.js" */
 
 export class ScenePlot1D extends ScenePlotABC{
+	/**
+	 * Create a new 1D plot.
+	 *
+	 * @param {SceneParent} parent
+	 * @param {HTMLCanvasElement} canvas
+	 * @param {String} cmapKey
+	 * */
 	constructor(parent, canvas, cmapKey){
 		let cmap = parent.create_listed_colormap_selector(cmapKey);
 		super(parent, canvas, cmap);
@@ -16,7 +24,6 @@ export class ScenePlot1D extends ScenePlotABC{
 				this.redrawWaiting = true;
 			});
 		}
-
 		const _draw_frame = () => {
 			const rd = this.redrawWaiting || cmap.changed;
 			if (rd && this.xGrid !== undefined){
@@ -129,9 +136,11 @@ export class ScenePlot1D extends ScenePlotABC{
 		ctx.clip();
 
 		const _x = (x) => {
+			if (this.xGrid.length == 1) return (this._xcBounds[0] + this._xcBounds[1])/2.0
 			return this._xcBounds[0] + (x - minX)/(maxX - minX)*(this._xcBounds[1] - this._xcBounds[0])
 		}
 		const _y = (y) => {
+			if (this.yGrid.length == 1) return (this._ycBounds[0] + this._ycBounds[1])/2.0
 			return this._ycBounds[0] + (y - minY)/(maxY - minY)*(this._ycBounds[1] - this._ycBounds[0])
 		}
 		this.cmap.changed = false;
@@ -237,13 +246,16 @@ export class ScenePlot1D extends ScenePlotABC{
 		ctx.restore();
 	}
 	draw_xgrid(){
+		let sect;
 		const ctx = this.create_context();
 		const count = this.xGrid.length;
-		const sect = linspace(this._xcBounds[0], this._xcBounds[1], count);
 		const maxY = this._ycBounds[1];
 		const textPadding = this.cTextPadding;
 		const minY = this._ycBounds[0];
 		const fontSize = this.cAxesFontSize;
+
+		if (count == 1) sect = [(this._xcBounds[0] + this._xcBounds[1])/2];
+		else sect = linspace(this._xcBounds[0], this._xcBounds[1], count);
 
 		ctx.save();
 		ctx.textBaseline = 'top';

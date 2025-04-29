@@ -33,6 +33,7 @@ export function deg2rad(degrees){
  * @return {Float32Array}
  * */
 export function linspace(start, stop, num){
+	if (num == 1) return new Float32Array([start]);
 	return Float32Array.from({length: num}, (_, i) => start + (stop - start)/(num - 1) * i);
 }
 
