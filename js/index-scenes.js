@@ -21,7 +21,6 @@ export class SceneSystemGlobals extends SceneControl{
 		this.kb = c_boltzmann*this.bandwidth;
 		this.noise_power = 10**((-173.98-30)/10);
 	}
-
 	/**
 	 * Auto-build global scene.
 	 *
@@ -57,7 +56,6 @@ export class SceneSystemGlobals extends SceneControl{
 	}
 }
 
-
 const ICO_SIZE = 50;
 export class SceneSystemPlot extends ScenePlot1D{
 	/**
@@ -67,13 +65,14 @@ export class SceneSystemPlot extends ScenePlot1D{
 	 * @param {HTMLDivElement} element
 	 * @param {Number} counter
 	 * */
-	constructor(parent, element, counter){
+	constructor(parent, element, counter, loadPars){
 		const pre = "plot-" + String(counter);
 		const cmk = pre + "-colormap";
 		const chc = document.createElement('select');
 		const div1 = document.createElement('div');
 		const div2 = document.createElement('div')
 		const div3 = document.createElement('div');
+		const but1 = document.createElement('button');
 
 		parent.columns.forEach((c) => {
 			if (!c.plottable) return;
@@ -81,9 +80,17 @@ export class SceneSystemPlot extends ScenePlot1D{
 			opt.innerHTML = c.title;
 			chc.appendChild(opt);
 			opt.setAttribute('data-cls', c.constructor.name);
+			opt.setAttribute('data-uindex', c.constructor.uindex);
 		})
 
-		chc.addEventListener('change', () => { this.draw(); });
+		chc.addEventListener('change', () => {
+			this.needsSave = true;
+			this.needsUpdate = true;
+		});
+		but1.addEventListener('click', () => {
+			this.needsDelete = true;
+		})
+		but1.innerHTML = 'Remove Plot';
 
 		chc.id = parent.prepend + "-" + pre + "-choice";
 		div1.class = "canvas-header";
@@ -106,22 +113,44 @@ export class SceneSystemPlot extends ScenePlot1D{
 		lbl.setAttribute('for', parent.prepend + "-" + cmk);
 		sel.id = parent.prepend + "-" + cmk;
 		sel.setAttribute('name', parent.prepend + "-" + cmk);
+		sel.addEventListener('change', () => {
+			this.needsSave = true;
+		});
 
 		div4.appendChild(chc);
 		div4.appendChild(lbl);
 		div4.appendChild(sel);
+		div4.appendChild(but1);
 
 		div3.appendChild(div4);
 		super(parent, canvas, cmk);
+		this.needsDelete = false;
+		this.needsUpdate = true;
+		this.needsSave = true;
 
 		this.selector = chc;
+		if (loadPars !== undefined){
+			const cm = loadPars[1];
+			const cms = this.cmap.selector;
+			for (let i = 0; i < cms.length; i++){
+				if (cms[i].innerHTML == cm) cms[i].setAttribute('selected', true);
+			}
+			const skey = loadPars[0];
+			for (let i = 0; i < chc.length; i++){
+				if (chc[i].getAttribute('data-uindex') == skey) chc[i].setAttribute('selected', true);
+			}
+		}
+	}
+	get save_parameters(){
+		this.needsSave = false;
+		return [this.active_column().constructor.uindex, this.selected_cmap()]
 	}
 	/**
 	 * Find and return selected column
 	 *
 	 * @returns {SysColumnHint}
 	 * */
-	find_active_column(){
+	active_column(){
 		const cols = this.parent.columns;
 		let sel = this.selector[0].getAttribute('data-cls');
 		for (let i = 0; i < this.selector.length; i++){
@@ -135,10 +164,9 @@ export class SceneSystemPlot extends ScenePlot1D{
 			return kls;
 		}
 		return cols[0];
-
 	}
 	draw(){
-		const col = this.find_active_column();
+		const col = this.active_column();
 		const x = [];
 		const y = [];
 
@@ -168,17 +196,21 @@ export class SceneSystemPlot extends ScenePlot1D{
 		this.set_ygrid(minY, maxY, 11);
 		this.add_data(x, y, null, {'markers': true});
 		this.set_ylabel(col.label);
+		this.needsUpdate = false;
 
 		super.draw();
 	}
 	draw_xgrid(){
+		let sect;
 		const ctx = this.create_context();
 		const count = this.xGrid.length;
-		const sect = linspace(this._xcBounds[0], this._xcBounds[1], count);
 		const maxY = this._ycBounds[1];
 		const textPadding = this.cTextPadding;
 		const minY = this._ycBounds[0];
 		const blocks = this.parent.blocks;
+
+		if (count == 1) sect = [(this._xcBounds[0] + this._xcBounds[1])/2];
+		else sect = linspace(this._xcBounds[0], this._xcBounds[1], count);
 
 		ctx.save();
 		ctx.textBaseline = 'top';
@@ -228,6 +260,6 @@ export class SceneSystemPlot extends ScenePlot1D{
 		const txt = blocks[blocks.length - 1].get_parameter('part_number');
 		let mt = ctx.measureText(txt);
 		this._ycBounds[0] = this.canvas.height - this.cPadding - textPadding - mx*Math.sin(Math.PI*45/180)-ICO_SIZE;
-		this._xcBounds[1] -= Math.max(ICO_SIZE/2, mt.width*Math.cos(Math.PI*45/180))
+		this._xcBounds[1] -= Math.max(ICO_SIZE/2, mt.width*Math.cos(Math.PI*45/180));
 	}
 }

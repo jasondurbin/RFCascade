@@ -30,6 +30,12 @@ export class ScenePlotABC extends SceneObjectABC{
 		})
 		this.min = _val();
 	}
+	/**
+	* Return the selected colormap.
+	*
+	* @returns {String}
+	* */
+	selected_cmap = () => { return this.cmap.selector.value; }
 	create_hover_items(){
 		const canvas = this.canvas;
 		const p = canvas.parentElement.parentElement;

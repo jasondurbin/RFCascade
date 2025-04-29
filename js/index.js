@@ -29,7 +29,7 @@ export class SceneControlSystemCalc extends SceneParent{
 		super(prepend, ['container', 'reset', 'add-type', 'add-type-selection']);
 		this.updateWaiting = true;
 		this.globals = SceneSystemGlobals.build(this);
-		this.cmap = find_colormap('Vibrant');
+		this.cmap = find_colormap('Vibrant_r');
 
 		this.urlBanner = new SceneBannerError();
 		this.urlBanner.text = "The URL created when saving the data exceeds 2000 characters. This will become a problem when sharing or saving. You could potentially reduce the size by removing part numbers or removing elements."
@@ -67,6 +67,9 @@ export class SceneControlSystemCalc extends SceneParent{
 			}
 			this.redraw_scene();
 		})
+		this.find_element('add-plot').addEventListener('click', () => {
+			this.add_plot();
+		})
 		const sel = this.find_element('add-type-selection');
 		SysBlocks.forEach((e) => {
 			const opt = document.createElement('option');
@@ -87,17 +90,20 @@ export class SceneControlSystemCalc extends SceneParent{
 		this.columns = Array.from(this.calc_columns);
 
 		this.pcounter = 1;
+		/** @type {Array<SceneSystemPlot>} */
 		this.plots = []
-		document.querySelectorAll("."+this.prepend+"-plot").forEach((e) => {
-			this.add_plot(e);
-		});
 
 		this.output = new SysBlockNode(this);
 		load_system(this);
 		this.redraw_scene();
 	}
-	add_plot(container){
-		this.plots.push(new SceneSystemPlot(this, container, this.pcounter));
+	add_plot(defaults){
+		const con = this.find_element("plots");
+		const div = document.createElement('div');
+		div.classList = "system-plot";
+		con.appendChild(div);
+		const p = new SceneSystemPlot(this, div, this.pcounter, defaults);
+		this.plots.push(p);
 		this.pcounter++;
 	}
 	create_default_blocks(){
@@ -337,6 +343,7 @@ export class SceneControlSystemCalc extends SceneParent{
 		this.running = true;
 		const _calculate = () => {
 			let replot = false;
+			let save = false;
 			if (this.updateWaiting){
 
 				const blocks = Array.from(this.blocks);
@@ -346,7 +353,6 @@ export class SceneControlSystemCalc extends SceneParent{
 					b.process_inputs();
 					b.reset_parameters();
 				});
-				save_system(this);
 
 				const node = new SysCalculationNode(this);
 				blocks.forEach((b) => {
@@ -365,6 +371,7 @@ export class SceneControlSystemCalc extends SceneParent{
 				});
 				this.updateWaiting = false;
 				replot = true;
+				save = true;
 			}
 			this.columns.forEach((c) => {
 				if (c.reformatWaiting){
@@ -375,14 +382,38 @@ export class SceneControlSystemCalc extends SceneParent{
 					replot = true;
 				}
 			});
-			if (replot){
-				this.plots.forEach((p) => {
-					p.draw();
-				});
-			}
+			if (this.process_plots(replot)) save_system(this);
 			requestAnimationFrame(_calculate);
 		}
 		_calculate();
+	}
+	redraw_plots(){
+		const loads = [];
+		const plts = Array.from(this.plots);
+
+		this.find_element("plots").innerHTML = '';
+		this.plots = [];
+		plts.forEach((p) => {
+			if (p.needsDelete) return;
+			this.add_plot(p.save_parameters);
+		})
+	}
+	process_plots(force){
+		let redraw = false;
+		let save = false;
+		this.plots.forEach((p) => {
+			if (p.needsDelete){
+				redraw = true;
+				save = true;
+			}
+		});
+		if (redraw) this.redraw_plots();
+		this.plots.forEach((p) => {
+			if (p.needsSave || force) save = true;
+			if (!p.needsUpdate && !force) return
+			p.draw();
+		})
+		return save;
 	}
 	/**
 	 * Format input Number to a string.

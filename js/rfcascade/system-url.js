@@ -57,7 +57,14 @@ export function save_system(sys){
 	sys.columns.forEach((c) => {
 		vCols.push([c.constructor.uindex, c.visible])
 	})
+
+	const plots = [];
+	sys.plots.forEach((p) => {
+		plots.push(p.save_parameters)
+	})
+
 	config['c'] = vCols;
+	config['p'] = plots;
 	url.set_param('s', btoa(JSON.stringify(config)));
 }
 
@@ -94,9 +101,7 @@ export function load_blocks(parent, configs){
  * @param {SceneControlSystemCalc} sys
  * */
 export function load_system(sys){
-	const url = FindSceneURL();
-	const s = url.get_param('s');
-	load_system_uri(sys, s);
+	load_system_uri(sys, FindSceneURL().get_param('s'));
 }
 
 /**
@@ -115,6 +120,13 @@ export function load_system_uri(sys, uri){
 	}
 	const _blocks = (config) => {
 		try{ return load_blocks(sys, config['b']); }
+		catch(e){
+			console.log(e);
+			return null;
+		}
+	}
+	const _plots = (config) => {
+		try{ return Array.from(config['p']); }
 		catch(e){
 			console.log(e);
 			return null;
@@ -157,6 +169,12 @@ export function load_system_uri(sys, uri){
 			blocks = _blocks(config);
 			let vcols = _cols(config);
 			if (vcols !== null) sys.columns = vcols;
+			let pplots = _plots(config);
+			if (pplots !== null){
+				pplots.forEach((p) => {
+					sys.add_plot(p)
+				})
+			}
 		}
 	}
 	if (blocks !== null && blocks.length != 0) sys.blocks = blocks;
