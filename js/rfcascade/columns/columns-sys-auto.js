@@ -35,28 +35,28 @@ export class SysColumnSystemLinearSignalPowerInIdeal extends SysColumnSystemOutp
 	static title = 'Signal Power In';
 	static unit = ColumnUnitPower;
 	static key = 'signal_power_in';
-	static uindex = 41;
+	static uindex = 201;
 }
 
 export class SysColumnSystemLinearNoisePowerIn extends SysColumnSystemOutputAuto{
 	static title = 'Noise Power In';
 	static unit = 'W/Hz';
 	static key = 'noise_power_in';
-	static uindex = 42;
+	static uindex = 202;
 }
 
 export class SysColumnSystemSNROut extends SysColumnSystemOutputAuto{
 	static title = 'SNR Out';
 	static unit = ColumnUnitGain;
 	static key = 'snr_out';
-	static uindex = 43;
+	static uindex = 203;
 }
 
 export class SysColumnSystemSNRIn extends SysColumnSystemOutputAuto{
 	static title = 'SNR In';
 	static unit = ColumnUnitGain;
 	static key = 'snr_in';
-	static uindex = 44;
+	static uindex = 204;
 }
 
 export const ColumnSysAuto = [

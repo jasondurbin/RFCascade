@@ -35,7 +35,7 @@ export class SysColumnElementCalculated extends SysColumnABC{
 export class SysColumnElementLinearPowerGain extends SysColumnElementCalculated{
 	static unit = ColumnUnitPowerGain;
 	static key = 'power_gain';
-	static uindex = 21;
+	static uindex = 41;
 	create_unit(container){
 		super.create_unit(container);
 		this.unit.addEventListener('change', () => {
@@ -54,13 +54,13 @@ export class SysColumnElementNoiseTemperature extends SysColumnElementCalculated
 	static title = 'Noise Temperature';
 	static unit = ColumnUnitTemperature;
 	static key = 'noise_temperature';
-	static uindex = 22;
+	static uindex = 42;
 }
 
 export class SysColumnElementNoiseFigureActual extends SysColumnElementCalculated{
 	static unit = ColumnUnitGain;
 	static key = 'noise_figure_physical';
-	static uindex = 23;
+	static uindex = 43;
 	create_unit(container){
 		super.create_unit(container);
 		this.unit.addEventListener('change', () => {
@@ -78,21 +78,21 @@ export class SysColumnElementDeviceTemperature extends SysColumnElementCalculate
 	static title = 'Device Temperature';
 	static unit = ColumnUnitTemperature;
 	static key = 'physical_temperature';
-	static uindex = 24;
+	static uindex = 44;
 }
 
 export class SysColumnElementDeviceOP1dB extends SysColumnElementCalculated{
 	static title = 'OP1dB';
 	static unit = ColumnUnitPower;
 	static key = 'op1db';
-	static uindex = 25;
+	static uindex = 45;
 }
 
 export class SysColumnElementDeviceIP1dB extends SysColumnElementCalculated{
 	static title = 'IP1dB';
 	static unit = ColumnUnitPower;
 	static key = 'ip1db';
-	static uindex = 26;
+	static uindex = 46;
 }
 
 
