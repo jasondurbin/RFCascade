@@ -197,7 +197,6 @@ export class SceneControlSystemCalc extends SceneParent{
 		const tr = document.createElement('tr');
 		this.columns.forEach((r) => {
 			const dtype = r.column_type;
-			if (!r.visible) return;
 			const td = document.createElement('td');
 			obj.map_cell(r.parameter_key, td);
 			td.classList = this.class_list(r);
@@ -276,7 +275,9 @@ export class SceneControlSystemCalc extends SceneParent{
 		this.table.appendChild(tr);
 	}
 	class_list(col){
-		return "td-" + col.column_type + " td-" + col.parameter_key;
+		let kls = "td-" + col.column_type + " td-" + col.parameter_key;
+		if (!col.visible) kls += " td-hidden";
+		return kls;
 	}
 	add_headers(){
 		const tr1 = document.createElement('tr');
@@ -286,7 +287,6 @@ export class SceneControlSystemCalc extends SceneParent{
 		this.table.appendChild(tr1);
 		this.table.appendChild(tr2);
 		this.columns.forEach((r) => {
-			if (!r.visible) return;
 			const td1 = document.createElement('th');
 			const td2 = document.createElement('td');
 			const td3 = document.createElement('td');
@@ -331,7 +331,6 @@ export class SceneControlSystemCalc extends SceneParent{
 		const tr1 = document.createElement('tr');
 		this.table.appendChild(tr1);
 		this.columns.forEach((r) => {
-			if (!r.visible) return;
 			const td1 = document.createElement('td');
 			tr1.appendChild(td1);
 			const cl = this.class_list(r);
@@ -388,7 +387,6 @@ export class SceneControlSystemCalc extends SceneParent{
 		_calculate();
 	}
 	redraw_plots(){
-		const loads = [];
 		const plts = Array.from(this.plots);
 
 		this.find_element("plots").innerHTML = '';
@@ -400,7 +398,7 @@ export class SceneControlSystemCalc extends SceneParent{
 	}
 	process_plots(force){
 		let redraw = false;
-		let save = false;
+		let save = force;
 		this.plots.forEach((p) => {
 			if (p.needsDelete){
 				redraw = true;
