@@ -42,14 +42,20 @@ export class SysDeviceNoiseFigureContribution extends SysDeviceCascaded{
 
 	/** @inheritdoc @type {SysDeviceCascaded['calculate_element']} */
 	calculate_element(node, block){
-		const snr1 = block.get_parameter('snr_in')/block.get_parameter('aperture_gain_in');
-		const snr2 = block.get_parameter('snr_out')/node.aperture_gain;
+		const snr1 = block.get_parameter('snr_in')/block.get_parameter('negative_noise_figure_in');
+		const snr2 = block.get_parameter('snr_out')/node.negative_noise_figure;
 		this.update(block, snr1/snr2);
 	}
+	get selector_title(){
+		if (this.parent.globals.is_rx()) return "Coherent Noise Figure Contribution";
+		else return "Noise Figure Contribution";
+	}
 	get title(){
-		if (this.unit === undefined) return "Coherent Noise Figure Contribution";
-		if (this.unit.selected_unit == 'dB') return "Coherent Noise Figure Contribution";
-		return "Coherent Noise Factor Contribution";
+		let pre = '';
+		if (this.parent.globals.is_rx()) pre = 'Coherent '
+		if (this.unit === undefined) return `${pre}Noise Figure Contribution`;
+		if (this.unit.selected_unit == 'dB') return `${pre}Noise Figure Contribution`;
+		return `${pre}Noise Factor Contribution`;
 	}
 }
 
@@ -74,7 +80,29 @@ export class SysDeviceBackoffP1dB extends SysDeviceCascaded{
 	}
 }
 
+export class SysDeviceSPGNoiseFigureContribution extends SysDeviceCascaded{
+	static title = "Single Path Noise Figure Contribution";
+	static unit = ColumnUnitGain;
+	static key = 'noise_figure_contribution_spg';
+	static uindex = 403;
+
+	/** @inheritdoc @type {SysDeviceCascaded['calculate_element']} */
+	calculate_element(node, block){
+		const snr1 = block.get_parameter('snr_in_spg');
+		const snr2 = block.get_parameter('snr_out_spg');
+		this.update(block, snr1/snr2);
+	}
+	get title(){
+		if (this.unit === undefined) return "Single Path Noise Figure Contribution";
+		if (this.unit.selected_unit == 'dB') return "Single Path Noise Figure Contribution";
+		return "Single Path Noise Factor Contribution";
+	}
+	/** @inheritdoc @type {SysDeviceCascaded['force_hidden']} */
+	force_hidden(blocks){ return this.parent.globals.is_tx(); }
+}
+
 export const ColumnDeviceCascade = [
 	SysDeviceNoiseFigureContribution,
+	SysDeviceSPGNoiseFigureContribution,
 	SysDeviceBackoffP1dB,
 ]
