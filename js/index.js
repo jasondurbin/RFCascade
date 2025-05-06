@@ -3,7 +3,7 @@ import {SceneParent} from "./scene/scene-abc.js"
 import {SceneBannerError} from "./scene/scene-banners.js"
 import {SceneSystemGlobals, SceneSystemPlot} from "./index-scenes.js"
 import {SysColumns} from "./rfcascade/columns.js"
-import {SysBlockAmplifier, SysBlockPassive, SysCalculationNode, SysBlocks, SysBlockNode, SysBlockCombiner} from "./rfcascade/blocks.js"
+import {SysBlockAmplifier, SysBlockPassive, SysCalculationNode, SysBlocks, SysBlockNode, SysBlockCorporateCombiner, SysBlockAntenna, SysBlockCorporateDivider} from "./rfcascade/blocks.js"
 import {save_system, load_system} from "./rfcascade/system-url.js"
 import {find_colormap} from "./cmap/cmap-listed.js"
 /**
@@ -32,11 +32,12 @@ export class SceneControlSystemCalc extends SceneParent{
 		this.globals = SceneSystemGlobals.build(this, this.find_element('globals'));
 		this.cmap = find_colormap('Vibrant_r');
 
-		this.urlBanner = new SceneBannerError();
-		this.urlBanner.text = "The URL created when saving the data exceeds 2000 characters. This will become a problem when sharing or saving. You could potentially reduce the size by removing part numbers or removing elements."
-		this.urlBanner.hide();
+		const urlBanner = new SceneBannerError(this, null);
+		urlBanner.text = "The URL created when saving the data exceeds 2000 characters. This will become a problem when sharing or saving. You could potentially reduce the size by removing part numbers or removing elements."
+		urlBanner.hide();
 		const url = FindSceneURL();
-		url.add_url_warning(this.urlBanner);
+		url.add_url_warning(urlBanner);
+		this.add_banner(urlBanner)
 
 		const cont = this.find_element('container');
 		const div = document.createElement('div');
@@ -56,6 +57,7 @@ export class SceneControlSystemCalc extends SceneParent{
 		this.find_element('reset').addEventListener('click', () => {
 			this.blocks = this.create_default_blocks();
 			_reset_columns();
+			this.globals.reset();
 			this.request_redraw();
 		})
 		this.find_element('reset-columns').addEventListener('click', () => {
@@ -130,11 +132,25 @@ export class SceneControlSystemCalc extends SceneParent{
 		this.pcounter++;
 	}
 	create_default_blocks(){
+		if (this.globals.is_rx()) return this.create_default_rx();
+		return this.create_default_tx();
+	}
+	create_default_rx(){
+		return [
+			new SysBlockAntenna(this, {'color': this.cmap(0)}),
+			new SysBlockPassive(this, {'gain': -2, 'color': this.cmap(1)}),
+			new SysBlockAmplifier(this, {'color': this.cmap(2)}),
+			new SysBlockCorporateCombiner(this, {'color': this.cmap(3)}),
+			new SysBlockPassive(this, {'color': this.cmap(4)}),
+		]
+	}
+	create_default_tx(){
 		return [
 			new SysBlockPassive(this, {'gain': -2, 'color': this.cmap(0)}),
 			new SysBlockAmplifier(this, {'color': this.cmap(1)}),
-			new SysBlockCombiner(this, {'color': this.cmap(2)}),
+			new SysBlockCorporateDivider(this, {'color': this.cmap(2)}),
 			new SysBlockPassive(this, {'color': this.cmap(3)}),
+			new SysBlockAntenna(this, {'color': this.cmap(4)}),
 		]
 	}
 	request_redraw(){
@@ -177,27 +193,38 @@ export class SceneControlSystemCalc extends SceneParent{
 	 * @param {1 | -1} direction
 	 * */
 	move_column(col, direction){
-		let ni = -1;
-		let oi = -1;
-		if (direction > 0) direction = 2;
-		if (direction <= 0) direction = -1;
-		let canmove = direction > 0;
+		let li = -1; // left column index
+		let ri = -1; // right column index
+		let oi = -1; // original index
+		let mi = 0; // minimum index
+		let ii = -1; // new index
 		for (let i = 0; i < this.columns.length; i++){
-			if (this.columns[i] === col && canmove){
-				ni = i + direction;
-				oi = i;
-				break;
+			const icol = this.columns[i];
+			if (icol.position_fixed) mi = i;
+			else if (icol === col) oi = i;
+			else if (!icol.hidden){
+				if (oi < 0) li = i;
+				ri = i;
+				if (oi > 0) break;
 			}
-			if (!canmove && !this.columns[i].position_fixed) canmove = true;
 		}
-		if (ni >= 0 && ni <= this.columns.length){
+		if (li < 0) li = mi;
+		if (direction > 0) ii = ri + 1;
+		if (direction <= 0) ii = li;
+
+		if (ii > mi && ii <= this.columns.length){
 			const nb = [];
 			for (let i = 0; i < this.columns.length; i++){
+				const icol = this.columns[i];
+				if (icol.position_fixed){
+					nb.push(icol);
+					continue;
+				}
 				if (i == oi) continue;
-				if (i == ni) nb.push(col);
-				nb.push(this.columns[i]);
+				if (i == ii) nb.push(col);
+				nb.push(icol);
 			}
-			if (ni == this.columns.length) nb.push(col);
+			if (nb.length != this.columns.length) nb.push(col);
 			this.columns = nb;
 			this.request_redraw();
 		}
@@ -367,6 +394,7 @@ export class SceneControlSystemCalc extends SceneParent{
 		const _draw = () => {
 			let replot = false;
 			if (this.redrawRequested){
+
 				this.table.innerHTML = '';
 				this.calc_columns.forEach((c) => {c.check(this.blocks);})
 				this.add_headers();
@@ -386,6 +414,7 @@ export class SceneControlSystemCalc extends SceneParent{
 				blocks.forEach((b) => {
 					b.process_inputs();
 					b.reset_parameters();
+					b.process_drawings();
 				});
 
 				const node = new SysCalculationNode(this);
