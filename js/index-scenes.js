@@ -21,7 +21,43 @@ export class SceneSystemGlobals extends SceneControl{
 	}
 	static autoUpdateURL = false;
 	kb(){ return c_boltzmann*this.bandwidth(); }
-	noise_power(){ return this.kb()*this.system_temperature(); }
+	noise_power(){ return this.kb()*this.noise_temperature_input(); }
+	/**
+	 * Return system temperature in K.
+	 *
+	 * @returns {Number} Temperature in K
+	 * */
+	system_temperature(){ throw Error("Should be overriden."); }
+	/**
+	 * Return system bandwidth in Hz.
+	 *
+	 * @returns {Number} Bandwidth in Hz
+	 * */
+	bandwidth(){ throw Error("Should be overriden."); }
+	/**
+	 * Return system input power in W.
+	 *
+	 * @returns {Number} Input power in W
+	 * */
+	input_power(){ throw Error("Should be overriden."); }
+	/**
+	 * Return system noise temperature at input (in K).
+	 *
+	 * @returns {Number} Noise temperature at input (in K).
+	 * */
+	noise_temperature_input(){ throw Error("Should be overriden."); }
+	/**
+	 * Return True if system is configured for TX.
+	 *
+	 * @returns {Boolean}
+	 * */
+	is_tx(){ throw Error("Should be overriden."); }
+	/**
+	 * Return True if system is configured for RX.
+	 *
+	 * @returns {Boolean}
+	 * */
+	is_rx(){ throw Error("Should be overriden."); }
 	/**
 	 * Auto-build global scene.
 	 *
@@ -97,6 +133,34 @@ export class SceneSystemGlobals extends SceneControl{
 		obj.__resets.push(() => {
 			punit.selected_unit = 'dBm';
 			psel.value = -10;
+		})
+
+		const nunit = new ColumnUnitTemperature(this, 'K');
+		const [nlbl, nsel] = create_row('system-noise-temperature', 'input', nunit);
+		nsel.setAttribute('type', 'number');
+		nsel.value = 290;
+		nsel.addEventListener('change', () => {parent.request_redraw();})
+		nunit.addEventListener('change', () => {parent.request_redraw();})
+		obj.noise_temperature_input = () => { return nunit.convert_from(Number(nsel.value)); }
+		nlbl.innerHTML = 'Input Noise Temperature';
+		obj.__resets.push(() => {
+			nunit.selected_unit = 'K';
+			nsel.value = 290;
+		})
+
+		const [dlbl, dsel] = create_row('system-direction', 'select');
+		const opt1 = document.createElement('option');
+		const opt2 = document.createElement('option');
+		opt1.innerHTML = 'RX';
+		opt2.innerHTML = 'TX';
+		dsel.appendChild(opt1);
+		dsel.appendChild(opt2);
+		dsel.addEventListener('change', () => {parent.request_redraw();})
+		obj.is_tx = () => { return opt2.selected; }
+		obj.is_rx = () => { return opt1.selected; }
+		dlbl.innerHTML = 'System Direction';
+		obj.__resets.push(() => {
+			opt1.selected = true;
 		})
 		return obj;
 	}
