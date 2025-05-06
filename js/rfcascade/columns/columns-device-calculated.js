@@ -12,6 +12,8 @@
  * | SysColumnDeviceIIP2
  * | SysColumnDeviceOIP2
  * | SysColumnDeviceApertureGain
+ * | SysColumnSinglePathGain
+ * | SysColumnDeviceElectronicGain
  * )} ColumnDeviceCalculatedHint
  * @typedef {(
  * 	 typeof SysColumnDeviceSignalPowerGain
@@ -25,9 +27,22 @@
  * | typeof SysColumnDeviceIIP2
  * | typeof SysColumnDeviceOIP2
  * | typeof SysColumnDeviceApertureGain
+ * | typeof SysColumnSinglePathGain
+ * | typeof SysColumnDeviceElectronicGain
  * )} ColumnDeviceCalculatedTypeHint
  *
- * @typedef {'signal_power_gain' | 'noise_factor' | 'noise_temperature' | 'noise_figure_physical' | 'physical_temperature' | 'op1db' | 'ip1db' | 'aperture_gain'} KeyDeviceCalculatedHint
+ * @typedef {(
+ *   'signal_power_gain'
+ * | 'noise_factor'
+ * | 'noise_temperature'
+ * | 'noise_figure_physical'
+ * | 'physical_temperature'
+ * | 'op1db'
+ * | 'ip1db'
+ * | 'aperture_gain'
+ * | 'single_path_gain'
+ * | 'electronic_gain'
+ * )} KeyDeviceCalculatedHint
  */
 import {SysColumnABC} from "./columns-abc.js"
 import {ColumnUnitTemperature, ColumnUnitPowerGain, ColumnUnitGain, ColumnUnitPower} from "../column-units.js"
@@ -52,15 +67,15 @@ export class SysColumnDeviceCalculated extends SysColumnABC{
 }
 
 export class SysColumnDeviceSignalPowerGain extends SysColumnDeviceCalculated{
-	static title = "Device Gain";
+	static title = "Device Signal Gain";
 	static unit = ColumnUnitPowerGain;
 	static key = 'signal_power_gain';
 	static uindex = 41;
 	get title(){
-		if (this.unit === undefined) return "Device Gain";
-		if (this.unit.selected_unit == 'V/V') return "Device Voltage Gain";
-		if (this.unit.selected_unit == 'W/W') return "Device Power Gain";
-		return "Device Gain";
+		if (this.unit === undefined) return "Device Signal Gain";
+		if (this.unit.selected_unit == 'V/V') return "Device Signal Voltage Gain";
+		if (this.unit.selected_unit == 'W/W') return "Device Signal Power Gain";
+		return "Device Signal Gain";
 	}
 }
 
@@ -140,15 +155,41 @@ export class SysColumnDeviceIIP2 extends SysColumnDeviceCalculated{
 }
 
 export class SysColumnDeviceApertureGain extends SysColumnDeviceCalculated{
-	static title = "Device Aperture Gain";
+	static title = "Device Array Gain";
 	static unit = ColumnUnitGain;
-	static key = 'aperture_gain';
+	static key = 'array_gain';
 	static uindex = 51;
+}
+
+export class SysColumnSinglePathGain extends SysColumnDeviceCalculated{
+	static title = "Device Single Path Gain";
+	static unit = ColumnUnitGain;
+	static key = 'single_path_gain';
+	static uindex = 52;
+	/** @inheritdoc @type {SysColumnSystemCascade['force_hidden']} */
+	force_hidden(blocks){ return this.parent.globals.is_tx(); }
+}
+
+export class SysColumnDeviceElectronicGain extends SysColumnDeviceCalculated{
+	static title = "Device Electronic Gain";
+	static unit = ColumnUnitPowerGain;
+	static key = 'electronic_gain';
+	static uindex = 53;
+	get title(){
+		if (this.unit === undefined) return "Device Electronic Gain";
+		if (this.unit.selected_unit == 'V/V') return "Device Electronic Voltage Gain";
+		if (this.unit.selected_unit == 'W/W') return "Device Electronic Power Gain";
+		return "Device Electronic Gain";
+	}
+	/** @inheritdoc @type {SysColumnSystemCascade['force_hidden']} */
+	force_hidden(blocks){ return this.parent.globals.is_tx(); }
 }
 
 export const ColumnDeviceCalculated = [
 	SysColumnDeviceSignalPowerGain,
+	SysColumnDeviceElectronicGain,
 	SysColumnDeviceApertureGain,
+	SysColumnSinglePathGain,
 	SysColumnDeviceTemperature,
 	SysColumnDeviceNoiseTemperature,
 	SysColumnDeviceNoiseFigureActual,
