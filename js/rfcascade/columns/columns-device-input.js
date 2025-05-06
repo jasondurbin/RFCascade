@@ -10,6 +10,7 @@
  * | SysColumnDeviceIP3
  * | SysColumnDeviceIP2
  * )} ColumnDeviceInputHint
+ *
  * @typedef {(
  * 	 typeof SysColumnDeviceGain
  * | typeof SysColumnDeviceNoiseFigure
@@ -22,7 +23,7 @@
  * | typeof SysColumnDeviceIP2
  * )} ColumnDeviceInputTypeHint
  *
- * @typedef {'gain' | 'noise_figure' | 'part_number' | 'p1db' | 'linearity' | 'color' | 'ip3' | 'ip2' | 'temperature_offset'} KeyDeviceInputHint
+ * @typedef {'gain' | 'noise_figure' | 'part_number' | 'p1db' | 'linearity' | 'color' | 'ip3' | 'ip2' | 'temperature_offset' | 'io_count'} KeyDeviceInputHint
 */
 import {SysColumnABC} from "./columns-abc.js"
 import {ColumnSectionDeviceInput} from "./column-sections.js"
