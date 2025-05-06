@@ -2,6 +2,9 @@ import {MeshColormapControl} from "../cmap/cmap-mesh.js";
 import {ListedColormapControl} from "../cmap/cmap-listed.js";
 import {SceneQueue} from "./scene-queue.js";
 import {ScenePopup, FindSceneURL} from "./scene-util.js";
+import {SceneBannerWarning, SceneBannerError} from "./scene-banners.js"
+import {SceneObjectEvent} from "./scene-event-obj.js"
+/** @import {SceneBanner} from "./scene-banners.js" */
 
 export class SceneObjectParameterMap{
 	/**
@@ -73,45 +76,6 @@ export class SceneObjectParameterMap{
 			this.label.innerHTML = this.title;
 		}
 	}
-}
-
-export class SceneObjectEvent{
-	constructor(){
-		this.eventTypes = new Set([]);
-		this.listeners = {};
-	}
-
-	/**
-	* Install an event listener similar to pure Javascript.
-	*
-	* Example events:
-	*       `control-changed`: (controlname) => {}
-	*
-	* Classes that inherit this may add their own event types.
-	* These can be viewed using calling `list_event_types()`
-	* which return all valid event types.
-	*
-	* @param {String} event
-	* @param {function(...):null} callback
-	*
-	* @return {null}
-	* */
-	addEventListener(event, callback){
-		if (!(this.eventTypes.has(event))){
-			throw Error(`'${event} is not a valid event. Expected: ${Array.from(this.eventTypes).join(', ')}`)
-		}
-		if (!(event in this.listeners)) this.listeners[event] = [];
-		this.listeners[event].push(callback);
-	}
-	async trigger_event(event, ...args){
-		if (!(this.eventTypes.has(event))){
-			throw Error(`'${event} is not a valid event to trigger.`)
-		}
-		if (!(event in this.listeners)) return;
-		for (const func of this.listeners[event]){ await func(...args); }
-	}
-	list_event_types(){ return this.eventTypes; }
-	add_event_types(...args){ this.eventTypes = this.eventTypes.union(new Set(args)); }
 }
 
 export class SceneObjectABC extends SceneObjectEvent{
@@ -215,6 +179,11 @@ export class SceneObjectABC extends SceneObjectEvent{
 }
 
 export class SceneParent extends SceneObjectABC{
+	constructor(...args){
+		super(...args);
+		/** @type {Array<SceneBanner>} */
+		this.banners = [];
+	}
 	/**
 	* A control with name `key` has changed.
 	*
@@ -262,6 +231,59 @@ export class SceneParent extends SceneObjectABC{
 				cons.add(k);
 			}
 		});
+	}
+	/**
+	* Add banner to be monitored.
+	*
+	* @param {SceneBanner} banner
+	* */
+	add_banner(banner){
+		this.banners.push(banner);
+		this.display_banners();
+		banner.addEventListener('visibility-change', () => {this.display_banners();})
+	}
+	/**
+	* Create a banner and add it to queue.
+	*
+	* @param {typeof SceneBanner} kls
+	* @param {String} msg
+	* @param {Number} timeout in ms
+	* */
+	_create_banner(kls, msg, timeout){
+		if (timeout === undefined) timeout = 5000;
+		const w = new kls(this, timeout);
+		w.text = msg
+		w.show();
+		this.add_banner(w);
+	}
+	/**
+	* Create an Error banner.
+	*
+	* @param {String} msg
+	* @param {Number | null} timeout in ms. If null, banner will always stay open.
+	* */
+	throw_error(msg, timeout){
+		this._create_banner(SceneBannerError, msg, timeout);
+	}
+	/**
+	* Create a Warnung banner.
+	*
+	* @param {String} msg
+	* @param {Number | null} timeout in ms. If null, banner will always stay open.
+	* */
+	throw_warning(msg, timeout){
+		this._create_banner(SceneBannerWarning, msg, timeout);
+	}
+	display_banners(){
+		let c = 0;
+		const banners = []
+		for (let i = 0; i < this.banners.length; i++){
+			const b = this.banners[i];
+			if (b.isTemporary && !b.visible) continue;
+			banners.push(b);
+			b.top = c;
+			c += b.height + 5;
+		}
 	}
 }
 
