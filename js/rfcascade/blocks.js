@@ -515,19 +515,37 @@ export class SysBlockAntenna extends SysBlockABC{
 		const mg = 0.2;
 		const w = 0.3
 		const h = 0.2
-		ctx.beginPath();
-		ctx.moveTo(0.0, 0.5);
-		ctx.lineTo(mg, 0.5);
-		ctx.lineTo(mg, 1 - h);
-		ctx.lineTo(1 - w, 1 - h);
-		ctx.stroke();
 
-		ctx.beginPath();
-		ctx.moveTo(1 - w, 1 - h);
-		ctx.lineTo(1 - 2*w, mg);
-		ctx.lineTo(1, mg);
-		ctx.lineTo(1 - w, 1 - h);
-		ctx.stroke();
+		if (this.parent.globals.is_tx()){
+			ctx.beginPath();
+			ctx.moveTo(0.0, 0.5);
+			ctx.lineTo(mg, 0.5);
+			ctx.lineTo(mg, 1 - h);
+			ctx.lineTo(1 - w, 1 - h);
+			ctx.stroke();
+
+			ctx.beginPath();
+			ctx.moveTo(1 - w, 1 - h);
+			ctx.lineTo(1 - 2*w, mg);
+			ctx.lineTo(1, mg);
+			ctx.lineTo(1 - w, 1 - h);
+			ctx.stroke();
+		}
+		else{
+			ctx.beginPath();
+			ctx.moveTo(1, 0.5);
+			ctx.lineTo(1 - mg, 0.5);
+			ctx.lineTo(1 - mg, 1 - h);
+			ctx.lineTo(w, 1 - h);
+			ctx.stroke();
+
+			ctx.beginPath();
+			ctx.moveTo(w, 1 - h);
+			ctx.lineTo(2*w, mg);
+			ctx.lineTo(0, mg);
+			ctx.lineTo(w, 1 - h);
+			ctx.stroke();
+		}
 	}
 }
 
