@@ -3,7 +3,7 @@
  * @import { ColumnUnitHint } from "../column-units.js"
  * @import { BlockHint } from "../blocks.js"
  */
-import {SceneObjectEvent} from "../../scene/scene-abc.js"
+import {SceneObjectEvent} from "../../scene/scene-event-obj.js"
 import {ColumnSectionABC} from "./column-sections.js"
 
 export class SysColumnABC extends SceneObjectEvent{
@@ -17,6 +17,7 @@ export class SysColumnABC extends SceneObjectEvent{
 	static position_fixed = false;
 	static cascade = false;
 	static hideable = true;
+	static number_type = 'float';
 	static section = ColumnSectionABC;
 	/**
 	 * Column constructor
@@ -41,20 +42,58 @@ export class SysColumnABC extends SceneObjectEvent{
 	 * */
 	get section(){ return this.constructor.section; }
 	get plottable(){ return this.constructor.plottable; }
+	get selector_title(){ return this.constructor.title; }
 	get position_fixed(){ return this.constructor.position_fixed; }
 	get hideable(){ return this.constructor.hideable; }
 	get is_cascaded(){ return this.constructor.cascade; }
+	get number_type(){ return this.constructor.number_type; }
 	get reformatWaiting(){
 		if (!this.visible) return false;
 		if (this.unit !== null && this.unit.changed) return true;
 		return this._reformatWaiting;
 	}
+	/**
+	 * Has the user requested the column be visible?
+	 *
+	 * This is only the user requested value. Use `.hidden` to account
+	 * for any backend forced hidden.
+	 *
+	 * @returns {Boolean}
+	 * */
 	get visible(){ return this._visible; }
 	set visible(vis){
 		this._visible = vis;
 		this.trigger_event('visibility-changed', vis);
 	}
+	/**
+	 * Should the column be hidden?
+	 *
+	 * This accounts for user request to hide and backend force hidden.
+	 *
+	 * @returns {Boolean}
+	 * */
 	get hidden(){ return this.__forceHidden || !this._visible; }
+	get title(){ return this.constructor.title; }
+	get unit_label(){
+		if (this.unit === null){
+			const unit = this.constructor.unit;
+			if (unit == null || unit == undefined || unit == '') return '';
+			return unit;
+		}
+		return this.unit.selected_unit;
+	}
+	get selected_unit(){
+		if (this.unit === null) return null
+		this.__selectedUnit = this.unit.selected_unit;
+		return this.unit.selected_unit;
+	}
+	set selected_unit(u){
+		this.__selectedUnit = u;
+		if (this.unit !== null && this.unit !== undefined) this.unit.selected_unit = u;
+	}
+	get label(){ return `${this.title} (${this.unit_label})`;}
+	get parameter_key(){ return this.constructor.key; }
+	get column_type(){ return this.constructor.type; }
 	load_defaults(){
 		for (const [k, v] of Object.entries(this.constructor.defaults)){
 			this[k] = v;
@@ -119,25 +158,6 @@ export class SysColumnABC extends SceneObjectEvent{
 		if (this.header === undefined) return;
 		this.header.innerHTML = this.title;
 	}
-	get title(){ return this.constructor.title; }
-	get unit_label(){
-		if (this.unit === null){
-			const unit = this.constructor.unit;
-			if (unit == null || unit == undefined || unit == '') return '';
-			return unit;
-		}
-		return this.unit.selected_unit;
-	}
-	get selected_unit(){
-		if (this.unit === null) return null
-		this.__selectedUnit = this.unit.selected_unit;
-		return this.unit.selected_unit;
-	}
-	set selected_unit(u){
-		this.__selectedUnit = u;
-		if (this.unit !== null && this.unit !== undefined) this.unit.selected_unit = u;
-	}
-	get label(){ return `${this.title} (${this.unit_label})`;}
 	/**
 	 * Create a visibility selector and bind it.
 	 *
@@ -153,13 +173,13 @@ export class SysColumnABC extends SceneObjectEvent{
 		chk.setAttribute('type', 'checkbox');
 		chk.checked = this.visible;
 		lbl.setAttribute('for', cid);
-		lbl.innerText = this.constructor.title;
+		lbl.innerText = this.selector_title;
 		div.appendChild(chk);
 		div.appendChild(lbl);
 		container.appendChild(div);
 		this.addEventListener('visibility-changed', (v) => { chk.checked = v; });
 		chk.addEventListener('click', () => { this.visible = chk.checked; })
-		this.visibilitySelectors.push(div);
+		this.visibilitySelectors.push([div, lbl]);
 	}
 	/**
 	 * Create unit for column.
@@ -191,14 +211,13 @@ export class SysColumnABC extends SceneObjectEvent{
 	 * */
 	convert(value){
 		let allowEng = true;
+		if (this.number_type == 'int') return value.toFixed(0);
 		if (this.unit !== null){
 			value = this.unit.convert(value);
 			allowEng = this.unit.allowEngineeringNotation;
 		}
 		return this.parent.format_float(value, allowEng);
 	}
-	get parameter_key(){ return this.constructor.key; }
-	get column_type(){ return this.constructor.type; }
 	update(block, value){
 		if (block.is_node) return;
 		this._reformatWaiting = true;
@@ -237,8 +256,9 @@ export class SysColumnABC extends SceneObjectEvent{
 		const fc = this.force_hidden(blocks);
 		const st = fc ? 'none' : 'block';
 		this.__forceHidden = fc;
-		this.visibilitySelectors.forEach((v) => {
-			v.style.display = st;
+		this.visibilitySelectors.forEach(([div, lbl]) => {
+			div.style.display = st;
+			lbl.innerText = this.selector_title;
 		})
 	}
 }
