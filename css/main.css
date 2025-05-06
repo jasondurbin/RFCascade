@@ -14,6 +14,9 @@
 	--error-banner-border-dark: #9C1010;
 	--error-banner-background-dark: #F76565;
 	--error-banner-text-dark: #FFF;
+	--warning-banner-border-dark: #B58D30;
+	--warning-banner-background-dark: #B5AC30;
+	--warning-banner-text-dark: #FFF;
 	--td-device-output-background-dark: #2f1967;
 	--td-input-background-dark: #2fc195;
 	--td-system-output-background-dark: #7c2494;
@@ -34,6 +37,9 @@
 	--error-banner-border-light: #9C1010;
 	--error-banner-background-light: #F76565;
 	--error-banner-text-light: #FFF;
+	--warning-banner-border-light: #B58D30;
+	--warning-banner-background-light: #B5AC30;
+	--warning-banner-text-light: #FFF;
 	--td-device-output-background-light: #ae98e6;
 	--td-input-background-light: #3dd0a4;
 	--td-system-output-background-light: #c36bdb;
@@ -55,6 +61,9 @@
 	--error-banner-border: var(--error-banner-border-dark);
 	--error-banner-background: var(--error-banner-background-dark);
 	--error-banner-text: var(--error-banner-text-dark);
+	--warning-banner-border: var(--warning-banner-border-dark);
+	--warning-banner-background: var(--warning-banner-background-dark);
+	--warning-banner-text: var(--warning-banner-text-dark);
 	--td-device-output-background: var(--td-device-output-background-dark);
 	--td-input-background: var(--td-input-background-dark);
 	--td-system-output-background: var(--td-system-output-background-dark);
@@ -76,6 +85,9 @@
 	--error-banner-border: var(--error-banner-border-light);
 	--error-banner-background: var(--error-banner-background-light);
 	--error-banner-text: var(--error-banner-text-light);
+	--warning-banner-border: var(--warning-banner-border-light);
+	--warning-banner-background: var(--warning-banner-background-light);
+	--warning-banner-text: var(--warning-banner-text-light);
 	--td-device-output-background: var(--td-device-output-background-light);
 	--td-input-background: var(--td-input-background-light);
 	--td-system-output-background: var(--td-system-output-background-light);
@@ -98,6 +110,9 @@
 		--error-banner-border: var(--error-banner-border-dark);
 		--error-banner-background: var(--error-banner-background-dark);
 		--error-banner-text: var(--error-banner-text-dark);
+		--warning-banner-border: var(--warning-banner-border-dark);
+		--warning-banner-background: var(--warning-banner-background-dark);
+		--warning-banner-text: var(--warning-banner-text-dark);
 		--td-device-output-background: var(--td-device-output-background-dark);
 		--td-input-background: var(--td-input-background-dark);
 		--td-system-output-background: var(--td-system-output-background-dark);
@@ -121,6 +136,9 @@
 		--error-banner-border: var(--error-banner-border-light);
 		--error-banner-background: var(--error-banner-background-light);
 		--error-banner-text: var(--error-banner-text-light);
+		--warning-banner-border: var(--warning-banner-border-light);
+		--warning-banner-background: var(--warning-banner-background-light);
+		--warning-banner-text: var(--warning-banner-text-light);
 		--td-device-output-background: var(--td-device-output-background-light);
 		--td-input-background: var(--td-input-background-light);
 		--td-system-output-background: var(--td-system-output-background-light);
@@ -173,6 +191,9 @@ select{
 	border: 1px solid var(--input-border-color);
 	padding: 4px;
 	transition: 0.3s;
+}
+input[type='color']{
+	cursor: pointer;
 }
 .container-full{
 	width: 100%;
@@ -323,14 +344,23 @@ input[type='color']{
 .button-side-remove{
 	mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" stroke-width="2"><path d="M18 6l-12 12"></path><path d="M6 6l12 12"></path></svg>');
 }
-.scene-banner-error{
+.scene-banner{
 	position: absolute;
 	top: 0px;
 	margin: 5px 10px;
 	max-width: 500px;
+	padding: 4px;
+	border-radius: 4px;
+	font-size: 0.8em;
+	font-weight: bold;
+}
+.scene-banner-warning{
+	border: 1px solid var(--warning-banner-border);
+	background-color: var(--warning-banner-background);
+	color: var(--warning-banner-text);
+}
+.scene-banner-error{
 	border: 1px solid var(--error-banner-border);
 	background-color: var(--error-banner-background);
 	color: var(--error-banner-text);
-	padding: 4px;
-	border-radius: 4px;
 }
