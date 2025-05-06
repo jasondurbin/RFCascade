@@ -3,7 +3,7 @@ import {SceneParent} from "./scene/scene-abc.js"
 import {SceneBannerError} from "./scene/scene-banners.js"
 import {SceneSystemGlobals, SceneSystemPlot} from "./index-scenes.js"
 import {SysColumns} from "./rfcascade/columns.js"
-import {SysBlockAmplifier, SysBlockPassive, SysCalculationNode, SysBlocks, SysBlockNode} from "./rfcascade/blocks.js"
+import {SysBlockAmplifier, SysBlockPassive, SysCalculationNode, SysBlocks, SysBlockNode, SysBlockCombiner} from "./rfcascade/blocks.js"
 import {save_system, load_system} from "./rfcascade/system-url.js"
 import {find_colormap} from "./cmap/cmap-listed.js"
 /**
@@ -26,9 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
  * */
 export class SceneControlSystemCalc extends SceneParent{
 	constructor(prepend){
-		super(prepend, ['container', 'reset', 'add-type', 'add-type-selection']);
+		super(prepend, ['container', 'reset', 'add-type', 'add-type-selection', 'visibility-controls', 'globals']);
 		this.updateWaiting = true;
-		this.globals = SceneSystemGlobals.build(this);
+		this.redrawRequested = true;
+		this.globals = SceneSystemGlobals.build(this, this.find_element('globals'));
 		this.cmap = find_colormap('Vibrant_r');
 
 		this.urlBanner = new SceneBannerError();
@@ -55,17 +56,17 @@ export class SceneControlSystemCalc extends SceneParent{
 		this.find_element('reset').addEventListener('click', () => {
 			this.blocks = this.create_default_blocks();
 			_reset_columns();
-			this.redraw_scene();
+			this.request_redraw();
 		})
 		this.find_element('reset-columns').addEventListener('click', () => {
 			_reset_columns();
-			this.redraw_scene();
+			this.request_redraw();
 		})
 		this.find_element('reset-colors').addEventListener('click', () => {
 			for (let i = 0; i < this.blocks.length; i++){
 				this.blocks[i].color = this.cmap(i);
 			}
-			this.redraw_scene();
+			this.request_redraw();
 		})
 		this.find_element('add-plot').addEventListener('click', () => {
 			this.add_plot();
@@ -82,12 +83,33 @@ export class SceneControlSystemCalc extends SceneParent{
 			SysBlocks.forEach((e) => {
 				if (e.title == v) this.blocks.push(new e(this, {'color': c}));
 			});
-			this.redraw_scene();
+			this.request_redraw();
 		})
 
 		/** @type {Array<SysColumnHint>} */
 		this.calc_columns = Array.from(SysColumns, (c) => new c(this));
 		this.columns = Array.from(this.calc_columns);
+
+		const vDiv = this.find_element('visibility-controls');
+		const cDivs = {};
+		this.calc_columns.forEach((c) => {
+			if (!c.hideable) return;
+			const s = c.section;
+			let cDiv = cDivs[s.title];
+			if (cDiv === undefined){
+				cDiv = document.createElement('div');
+				const pDiv = document.createElement('div');
+				const h = document.createElement('h4');
+				h.innerHTML = s.title;
+				cDiv.classList = "visibility-selectors"
+				cDivs[s.title] = cDiv;
+				vDiv.appendChild(pDiv);
+				pDiv.appendChild(h);
+				pDiv.appendChild(cDiv);
+			}
+			c.addEventListener('visibility-changed', () => { this.request_redraw(); });
+			c.create_visibility_selector(cDiv);
+		})
 
 		this.pcounter = 1;
 		/** @type {Array<SceneSystemPlot>} */
@@ -95,7 +117,8 @@ export class SceneControlSystemCalc extends SceneParent{
 
 		this.output = new SysBlockNode(this);
 		load_system(this);
-		this.redraw_scene();
+		this.request_redraw();
+		this.start_draw_loop();
 	}
 	add_plot(defaults){
 		const con = this.find_element("plots");
@@ -110,20 +133,12 @@ export class SceneControlSystemCalc extends SceneParent{
 		return [
 			new SysBlockPassive(this, {'gain': -2, 'color': this.cmap(0)}),
 			new SysBlockAmplifier(this, {'color': this.cmap(1)}),
-			new SysBlockPassive(this, {'color': this.cmap(2)}),
+			new SysBlockCombiner(this, {'color': this.cmap(2)}),
+			new SysBlockPassive(this, {'color': this.cmap(3)}),
 		]
 	}
-	redraw_scene(){
-		this.table.innerHTML = '';
-		this.add_headers();
-		let counter = 1;
-		this.blocks.forEach((b) => {
-			this.add_row(b, counter);
-			counter++;
-		});
-		this.add_row(this.output, counter);
-		this.updateWaiting = true;
-		this.calculate();
+	request_redraw(){
+		this.redrawRequested = true;
 	}
 	/**
 	 * Move block in lineup
@@ -152,7 +167,7 @@ export class SceneControlSystemCalc extends SceneParent{
 			}
 			if (ni == this.blocks.length) nb.push(obj);
 			this.blocks = nb;
-			this.redraw_scene();
+			this.request_redraw();
 		}
 	}
 	/**
@@ -184,7 +199,7 @@ export class SceneControlSystemCalc extends SceneParent{
 			}
 			if (ni == this.columns.length) nb.push(col);
 			this.columns = nb;
-			this.redraw_scene();
+			this.request_redraw();
 		}
 	}
 	/**
@@ -227,7 +242,7 @@ export class SceneControlSystemCalc extends SceneParent{
 						if (b == obj) return;
 						this.blocks.push(b);
 					})
-					this.redraw_scene();
+					this.request_redraw();
 				});
 				but1.classList = "button-side-remove";
 				but1.title = "Remove block."
@@ -267,7 +282,13 @@ export class SceneControlSystemCalc extends SceneParent{
 			else if (dtype == 'device-output'){
 				// ignore because this is updated when calculation is complete.
 			}
+			else if (dtype == 'device-cascade'){
+				// ignore because this is updated when calculation is complete.
+			}
 			else if (dtype == 'system-auto'){
+				// ignore because this is updated when calculation is complete.
+			}
+			else if (dtype == 'system-cascade'){
 				// ignore because this is updated when calculation is complete.
 			}
 			else throw Error(`Unknown column type ${dtype}.`);
@@ -276,7 +297,7 @@ export class SceneControlSystemCalc extends SceneParent{
 	}
 	class_list(col){
 		let kls = "td-" + col.column_type + " td-" + col.parameter_key;
-		if (!col.visible) kls += " td-hidden";
+		if (col.hidden) kls += " td-hidden";
 		return kls;
 	}
 	add_headers(){
@@ -302,27 +323,30 @@ export class SceneControlSystemCalc extends SceneParent{
 
 			if (!r.position_fixed){
 				const but1 = document.createElement('button');
-				const but2 = document.createElement('button');
-				const but3 = document.createElement('button');
-
 				but1.addEventListener('click', () => {
 					this.move_column(r, -1);
 				})
+				but1.classList = "button-header-left button-header";
+				but1.title = "Move column left."
+				td3.appendChild(but1);
+			}
+			if (r.hideable){
+				const but3 = document.createElement('button');
+
+				but3.addEventListener('click', () => {
+					r.visible = false;
+				})
+				but3.classList = "button-header-hide button-header";
+				but3.title = "Hide column from view."
+				td3.appendChild(but3);
+			}
+			if (!r.position_fixed){
+				const but2 = document.createElement('button');
 				but2.addEventListener('click', () => {
 					this.move_column(r, 1);
 				})
-				but3.addEventListener('click', () => {
-					r.visible = false;
-					this.redraw_scene();
-				})
-				but1.classList = "button-header-left button-header";
-				but3.classList = "button-header-hide button-header";
 				but2.classList = "button-header-right button-header";
-				but1.title = "Move column left."
 				but2.title = "Move column right."
-				but3.title = "Hide column from view."
-				td3.appendChild(but1);
-				td3.appendChild(but3);
 				td3.appendChild(but2);
 			}
 		});
@@ -337,14 +361,25 @@ export class SceneControlSystemCalc extends SceneParent{
 			td1.classList = cl;
 		});
 	}
-	calculate(){
+	start_draw_loop(){
 		if (this.running === true) return;
 		this.running = true;
-		const _calculate = () => {
+		const _draw = () => {
 			let replot = false;
-			let save = false;
+			if (this.redrawRequested){
+				this.table.innerHTML = '';
+				this.calc_columns.forEach((c) => {c.check(this.blocks);})
+				this.add_headers();
+				let counter = 1;
+				this.blocks.forEach((b) => {
+					this.add_row(b, counter);
+					counter++;
+				});
+				this.add_row(this.output, counter);
+				this.updateWaiting = true;
+				this.redrawRequested = false;
+			}
 			if (this.updateWaiting){
-
 				const blocks = Array.from(this.blocks);
 				blocks.push(this.output);
 
@@ -354,23 +389,22 @@ export class SceneControlSystemCalc extends SceneParent{
 				});
 
 				const node = new SysCalculationNode(this);
+
 				blocks.forEach((b) => {
 					if (!b.enabled) return;
-					this.calc_columns.forEach((c) => {
-						if (c.column_type == 'device-output' && (c.visible || c.required)){
-							c.calculate_element(node, b);
-						}
-					});
-					this.calc_columns.forEach((c) => {
-						if (c.column_type == 'system-output' && (c.visible || c.required)) c.calculate_element(node, b);
-					});
-					this.calc_columns.forEach((c) => {
-						if (c.column_type == 'system-auto' && (c.visible || c.required)) c.calculate_element(node, b);
-					});
+					const _calc_group = (key) => {
+						this.calc_columns.forEach((c) => {
+							if (c.column_type == key && (c.visible || c.required)) c.calculate_element(node, b);
+						});
+					}
+					_calc_group('device-output');
+					_calc_group('system-output');
+					_calc_group('system-cascade');
+					_calc_group('system-auto');
+					_calc_group('device-cascade');
 				});
 				this.updateWaiting = false;
 				replot = true;
-				save = true;
 			}
 			this.columns.forEach((c) => {
 				if (c.reformatWaiting){
@@ -382,9 +416,9 @@ export class SceneControlSystemCalc extends SceneParent{
 				}
 			});
 			if (this.process_plots(replot)) save_system(this);
-			requestAnimationFrame(_calculate);
+			requestAnimationFrame(_draw);
 		}
-		_calculate();
+		_draw();
 	}
 	redraw_plots(){
 		const plts = Array.from(this.plots);

@@ -1,30 +1,57 @@
 /**
- * @import {ColumnEleAttrHint, KeyEleAttrHint} from "./columns/columns-ele-attr.js"
- * @import {ColumnEleCalcHint, KeyEleCalcHint} from "./columns/columns-ele-calc.js"
- * @import {ColumnEleInputHint, KeyEleInputHint} from "./columns/columns-ele-input.js"
- * @import {ColumnSysAutoHint, KeySysAutoHint} from "./columns/columns-sys-auto.js"
- * @import {ColumnSysCalcHint, KeySysCalcHint} from "./columns/columns-sys-calc.js"
+ * @import {ColumnDeviceAttributeHint, ColumnDeviceAttributeTypeHint, KeyDeviceAttributeHint} from "./columns/columns-device-attributes.js"
+ * @import {ColumnDeviceCalculatedHint, ColumnDeviceCalculatedTypeHint, KeyDeviceCalculatedHint} from "./columns/columns-device-calculated.js"
+ * @import {ColumnDeviceCascadeHint, ColumnDeviceCascadeTypeHint, KeyDeviceCascadeHint} from "./columns/columns-device-cascade.js"
+ * @import {ColumnDeviceInputHint, ColumnDeviceInputTypeHint, KeyDeviceInputHint} from "./columns/columns-device-input.js"
+ * @import {ColumnSystemAutoHint, ColumnSystemAutoTypeHint, KeySystemAutoHint} from "./columns/columns-system-auto.js"
+ * @import {ColumnSystemCalculationHint, ColumnSystemCalculationTypeHint, KeySystemCalculationHint} from "./columns/columns-system-calculated.js"
+ * @import {ColumnSystemCascadeHint, ColumnSystemCascadeTypeHint, KeySystemCascadeHint} from "./columns/columns-system-cascade.js"
  *
- * @typedef {(ColumnEleAttrHint | ColumnEleCalcHint | ColumnEleInputHint | ColumnSysAutoHint | ColumnSysCalcHint)} SysColumnHint
- * @typedef {(KeyEleCalcHint | KeyEleInputHint | KeySysAutoHint | KeySysCalcHint | KeyEleAttrHint | KeySysConvHint)} KeyHintAny
+ * @typedef {(
+ *   ColumnDeviceAttributeHint
+ * | ColumnDeviceCalculatedHint
+ * | ColumnDeviceInputHint
+ * | ColumnSystemAutoHint
+ * | ColumnSystemCalculationHint
+ * | ColumnDeviceCascadeHint
+ * | ColumnSystemCascadeHint
+ * )} SysColumnHint
+ * @typedef {(
+ * ColumnDeviceAttributeTypeHint
+ * | ColumnDeviceCalculatedTypeHint
+ * | ColumnDeviceInputTypeHint
+ * | ColumnSystemAutoTypeHint
+ * | ColumnSystemCalculationTypeHint
+ * | ColumnDeviceCascadeTypeHint
+ * | ColumnSystemCascadeTypeHint
+ * )} SysColumnTypeHint
+ * @typedef {(
+ * KeyDeviceCalculatedHint
+ * | KeyDeviceInputHint
+ * | KeySystemAutoHint
+ * | KeySystemCalculationHint
+ * | KeyDeviceAttributeHint
+ * | KeyDeviceCascadeHint
+ * | KeySystemCascadeHint
+ * )} KeyHintAny
  */
 
-import {ColumnEleAttr} from "./columns/columns-ele-attr.js"
-import {ColumnEleCalc} from "./columns/columns-ele-calc.js"
-import {ColumnEleInput} from "./columns/columns-ele-input.js"
-import {ColumnSysAuto} from "./columns/columns-sys-auto.js"
-import {ColumnSysCalc} from "./columns/columns-sys-calc.js"
+import {ColumnDeviceAttribute} from "./columns/columns-device-attributes.js"
+import {ColumnDeviceCalculated} from "./columns/columns-device-calculated.js"
+import {ColumnDeviceInput} from "./columns/columns-device-input.js"
+import {ColumnDeviceCascade} from "./columns/columns-device-cascade.js"
+import {ColumnSystemSorted} from "./columns/columns-system.js"
 
-
+/** @type {Array<SysColumnTypeHint>} */
 export const SysColumns = [];
 const uids = {};
 
 [
-	ColumnEleAttr,
-	ColumnEleInput,
-	ColumnEleCalc,
-	ColumnSysCalc,
-	ColumnSysAuto,
+	ColumnDeviceAttribute,
+	ColumnDeviceInput,
+	ColumnDeviceCalculated,
+	ColumnDeviceCascade,
+	ColumnSystemSorted
 
 ].forEach(columns => {
 	columns.forEach((c) => {

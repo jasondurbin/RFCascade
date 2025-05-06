@@ -1,0 +1,176 @@
+/**
+ * @import { BlockHint, SysCalculationNode } from "../blocks.js"
+ * @typedef {(
+ *   SysColumnSignalPowerOutIdeal
+ * | SysColumnNoisePowerOut
+ * | SysColumnSystemOIP2
+ * | SysColumnSystemOIP3
+ * | SysColumnSystemOP1dB
+ * )} ColumnSystemCalculationHint
+ *
+ * @typedef {(
+ *   typeof SysColumnSignalPowerOutIdeal
+ * | typeof SysColumnNoisePowerOut
+ * | typeof SysColumnSystemOIP2
+ * | typeof SysColumnSystemOIP3
+ * | typeof SysColumnSystemOP1dB
+ * )} ColumnSystemCalculationTypeHint
+ *
+ * @typedef {'signal_power_out' | 'noise_power_out' | 'system_oip3' | 'system_oip2' | 'system_op1db'} KeySystemCalculationHint
+ */
+import {SysColumnABC} from "./columns-abc.js"
+import {ColumnUnitPower, ColumnUnitGain, ColumnUnitNoiseDensity} from "../column-units.js"
+import {ColumnSectionSystemCascaded} from "./column-sections.js"
+
+export class SysColumnSystemOutput extends SysColumnABC{
+	static type = 'system-output';
+	static section = ColumnSectionSystemCascaded;
+
+	update(block, value){
+		block.add_cascade_parameter(this.parameter_key, value);
+		super.update(block, value);
+	}
+	/**
+	 * Calculate column.
+	 *
+	 * @param {SysCalculationNode} node
+	 * @param {BlockHint} block
+	 * */
+	calculate_element(node, block){ throw Error("Need to overload."); }
+}
+
+export class SysColumnSignalPowerOutIdeal extends SysColumnSystemOutput{
+	static title = 'Signal Power Out';
+	static unit = ColumnUnitPower;
+	static unit_default = 'dBm';
+	static key = 'signal_power_out';
+	static uindex = 101;
+	static cascade = true;
+
+	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
+	calculate_element(node, block){
+		block.add_cascade_parameter('snr_in', node.snr_ideal);
+		const p = node.signal_power_ideal;
+		node.signal_power_ideal = p*block.get_parameter('signal_power_gain');
+		this.update(block, node.signal_power_ideal);
+		block.add_cascade_parameter('signal_power_in', p);
+		block.add_cascade_parameter('signal_gain_ideal', node.signal_power_ideal/node.signal_power_in);
+	}
+}
+
+export class SysColumnNoisePowerOut extends SysColumnSystemOutput{
+	static title = 'Noise Power Out';
+	static unit = ColumnUnitNoiseDensity;
+	static unit_default = 'dBm/Hz';
+	static key = 'noise_power_out';
+	static uindex = 102;
+
+	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
+	calculate_element(node, block){
+		const t = block.get_parameter('noise_temperature');
+		const g = block.get_parameter('noise_power_gain');
+		const p =  g*(node.kb * t + node.noise_power);
+		block.add_cascade_parameter('noise_power_in', node.noise_power);
+		node.noise_power = p;
+		this.update(block, p);
+		block.add_cascade_parameter('snr_out', node.snr_ideal);
+	}
+}
+
+export class SysColumnSystemOP1dB extends SysColumnSystemOutput{
+	static title = 'Cascaded OP1dB';
+	static unit = ColumnUnitPower;
+	static unit_default = 'dBm';
+	static key = 'system_op1db';
+	static uindex = 104;
+	static cascade = true;
+
+	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
+	calculate_element(node, block){
+		const i1 = node.p1dB;
+		const i2 = block.get_parameter('op1db');
+		const g2 = block.get_parameter('signal_power_gain');
+		let p1, p2, v;
+
+		if (!isFinite(i1)) p1 = 0.0;
+		else p1 = 1/(i1*g2);
+		if (!isFinite(i2)) p2 = 0.0;
+		else p2 = 1/i2;
+
+		if (p1 == 0.0 && p2 == 0.0) v = Infinity;
+		else v = 1/(p1 + p2);
+		node.p1dB = v;
+		this.update(block, v);
+	}
+}
+
+export class SysColumnSystemOIP3 extends SysColumnSystemOutput{
+	static title = 'Cascaded OIP3';
+	static unit = ColumnUnitPower;
+	static unit_default = 'dBm';
+	static key = 'system_oip3';
+	static uindex = 105;
+	static cascade = true;
+
+	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
+	calculate_element(node, block){
+		const i1 = node.oip3;
+		const i2 = block.get_parameter('oip3');
+		const g2 = block.get_parameter('signal_power_gain');
+		let p1, p2, v;
+
+		if (!isFinite(i1)) p1 = 0.0;
+		else p1 = 1/(i1*g2);
+		if (!isFinite(i2)) p2 = 0.0;
+		else p2 = 1/i2;
+
+		if (p1 == 0.0 && p2 == 0.0) v = Infinity;
+		else v = 1/(p1 + p2);
+		node.oip3 = v;
+		this.update(block, v);
+	}
+}
+
+export class SysColumnSystemOIP2 extends SysColumnSystemOutput{
+	static title = 'Cascaded OIP2';
+	static unit = ColumnUnitPower;
+	static unit_default = 'dBm';
+	static key = 'system_oip2';
+	static uindex = 106;
+	static cascade = true;
+
+	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
+	calculate_element(node, block){
+		const i1 = node.oip2;
+		const i2 = block.get_parameter('oip2');
+		const g2 = block.get_parameter('signal_power_gain');
+		let p1, p2, v;
+
+		if (!isFinite(i1)) p1 = 0.0;
+		else p1 = 1/(i1*g2);
+		if (!isFinite(i2)) p2 = 0.0;
+		else p2 = 1/i2;
+
+		if (p1 == 0.0 && p2 == 0.0) v = Infinity;
+		else v = 1/(p1 + p2);
+		node.oip2 = v;
+		this.update(block, v);
+	}
+}
+
+export class SysColumnSystemApertureGain extends SysColumnSystemOutput{
+	static title = 'Cascaded Aperture Gain';
+	static unit = ColumnUnitGain;
+	static key = 'system_aperture_gain';
+	static uindex = 107;
+	static cascade = true;
+
+	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
+	calculate_element(node, block){
+		const p1 = node.aperture_gain;
+		const p2 = block.get_parameter('aperture_gain');
+		node.aperture_gain = p1*p2;
+		block.add_cascade_parameter('aperture_gain_in', p1);
+		this.update(block, node.aperture_gain);
+	}
+}

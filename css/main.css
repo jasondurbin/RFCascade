@@ -202,13 +202,15 @@ select{
 	padding: 0px 4px;
 	vertical-align: middle;
 }
-.system-table .td-device-output{
+.system-table .td-device-output,
+.system-table .td-device-cascade{
 	background-color: var(--td-device-output-background);
 }
 .system-table .td-input{
 	background-color: var(--td-input-background);
 }
-.system-table .td-system-output{
+.system-table .td-system-output,
+.system-table .td-system-cascade{
 	background-color: var(--td-system-output-background);
 }
 .system-table .td-system-auto{
@@ -247,6 +249,44 @@ input[type='color']{
 #sys-container{
 	overflow-x: auto;
 	padding: 10px 0;
+}
+.visibility-controls{
+	border: 1px solid rgb(13, 135, 235);
+}
+.visibility-selectors{
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+.visibility-controls > div{
+	border: 1px solid rgb(13, 135, 235);
+	margin: 2px;
+	box-sizing: border-box;
+	padding: 2px;
+}
+.visibility-controls h4{
+	margin: 0px;
+}
+.visibility-selectors div{
+	transition: 0.3s;
+	display: block;
+	box-sizing: border-box;
+	background-color: var(--theme-bg-color);
+	color: var(--theme-color);
+	border-radius: 2px;
+	border: none;
+	padding: 4px;
+}
+.visibility-selectors div:hover{
+	border-radius: 5px;
+}
+.visibility-controls label,
+.visibility-controls input{
+	cursor: pointer;
+	user-select: none;
+	font-size: 0.8em;
+	vertical-align: middle;
 }
 .td-header-button{
 	text-align: center;

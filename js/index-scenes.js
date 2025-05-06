@@ -1,6 +1,7 @@
 import {SceneControl} from "./scene/scene-abc.js";
 import {ScenePlot1D} from "./scene/plot-1d/scene-plot-1d.js";
 import {linspace} from "./util.js";
+import {ColumnUnitTemperature, ColumnUnitFrequency, ColumnUnitPower} from "./rfcascade/column-units.js";
 /**
  * @import { SceneControlSystemCalc } from "./index.js"
  * @import { SysColumnHint } from "./rfcascade/columns.js"
@@ -13,46 +14,95 @@ export const c_boltzmann =  1.380649*(10**-23);
  * @param {SceneControlSystemCalc} parent
  * */
 export class SceneSystemGlobals extends SceneControl{
-	static autoUpdateURL = false;
 	constructor(parent){
-		super(parent, []);
-		this.system_temperature = 16.85 + 273.15;
-		this.bandwidth = 1.0;
-		this.kb = c_boltzmann*this.bandwidth;
-		this.noise_power = 10**((-173.98-30)/10);
+		super(parent, ["reset-globals"]);
+		this.__resets = [];
+		this.find_element("reset-globals").addEventListener('click', () => {this.reset()});
 	}
+	static autoUpdateURL = false;
+	kb(){ return c_boltzmann*this.bandwidth(); }
+	noise_power(){ return this.kb()*this.system_temperature(); }
 	/**
 	 * Auto-build global scene.
 	 *
 	 * @param {SceneControlSystemCalc} parent
+	 * @param {HTMLElement} container
 	 * */
-	static build(parent){
-		const cont = parent.find_element('container');
-		const div = document.createElement('div');
+	static build(parent, container){
+		const obj = new SceneSystemGlobals(parent);
+		const tbl = document.createElement('table');
+		container.appendChild(tbl)
 
-		cont.appendChild(div)
-
-		const create_row = (id, inputType) => {
+		const create_row = (id, inputType, unit) => {
+			const tr = document.createElement('tr');
+			tbl.appendChild(tr);
 			if (inputType === undefined) inputType = 'input';
 			const lbl = document.createElement('label');
 			const inp = document.createElement(inputType);
-			const dvv = document.createElement('div');
 			const cid = parent.prepend + "-" + id;
 			inp.id = cid;
 			lbl.setAttribute('for', cid);
-			dvv.appendChild(lbl);
-			dvv.appendChild(inp);
-			div.appendChild(dvv);
+			inp.setAttribute('name', cid);
+
+			const td1 = document.createElement('td');
+			const td2 = document.createElement('td');
+			const td3 = document.createElement('td');
+
+			tr.appendChild(td1);
+			tr.appendChild(td2);
+			tr.appendChild(td3);
+			if (unit !== undefined) {
+				const sel = unit.build()
+				td3.appendChild(sel);
+				sel.setAttribute('name', cid + "-unit");
+			}
+			td1.appendChild(lbl);
+			td2.appendChild(inp);
 			return [lbl, inp];
 		}
-		const [flbl, fsel] = create_row('frequency_unit', 'select');
-		flbl.innerHTML = 'Frequency Unit';
+		const tunit = new ColumnUnitTemperature(this, 'C');
+		const [tlbl, tsel] = create_row('system-temperature', 'input', tunit);
+		tsel.setAttribute('type', 'number');
+		tsel.value = 16.85;
+		tsel.addEventListener('change', () => {parent.request_redraw();})
+		tunit.addEventListener('change', () => {parent.request_redraw();})
+		obj.system_temperature = () => { return tunit.convert_from(Number(tsel.value)); }
+		tlbl.innerHTML = 'System Temperature';
+		obj.__resets.push(() => {
+			tunit.selected_unit = 'C';
+			tsel.value = 16.85;
+		})
 
-		let opt1 = document.createElement('option');
-		opt1.innerHTML = 'GHz';
-		fsel.appendChild(opt1);
+		const funit = new ColumnUnitFrequency(this, 'MHz');
+		const [flbl, fsel] = create_row('system-bandwidth', 'input', funit);
+		fsel.setAttribute('type', 'number');
+		fsel.value = 1;
+		fsel.addEventListener('change', () => {parent.request_redraw();})
+		funit.addEventListener('change', () => { parent.request_redraw(); })
+		obj.bandwidth = () => { return funit.convert_from(Number(fsel.value)); }
+		flbl.innerHTML = 'Bandwidth';
+		obj.__resets.push(() => {
+			funit.selected_unit = 'MHz';
+			fsel.value = 1.0;
+		})
 
-		return new SceneSystemGlobals(parent);
+		const punit = new ColumnUnitPower(this, 'dBm');
+		const [plbl, psel] = create_row('system-input-power', 'input', punit);
+		psel.setAttribute('type', 'number');
+		psel.value = -10;
+		psel.addEventListener('change', () => {parent.request_redraw();})
+		punit.addEventListener('change', () => {parent.request_redraw();})
+		obj.input_power = () => { return punit.convert_from(Number(psel.value)); }
+		plbl.innerHTML = 'Input Power';
+		obj.__resets.push(() => {
+			punit.selected_unit = 'dBm';
+			psel.value = -10;
+		})
+		return obj;
+	}
+	reset(){
+		this.__resets.forEach(c => c());
+		this.parent.request_redraw();
 	}
 }
 

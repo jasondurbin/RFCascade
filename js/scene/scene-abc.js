@@ -75,30 +75,12 @@ export class SceneObjectParameterMap{
 	}
 }
 
-export class SceneObjectABC{
-	constructor(prepend, controls, autoUpdateURL){
-		if (autoUpdateURL === undefined){
-			if (this.constructor.autoUpdateURL !== undefined) autoUpdateURL = this.constructor.autoUpdateURL;
-			else autoUpdateURL = true;
-		}
-		this.autoUpdateURL = autoUpdateURL;
-		this.prepend = prepend;
-		this.colormap = {};
-		this.changed = {};
-		this.elements = {};
-		this.find_elements(controls);
+export class SceneObjectEvent{
+	constructor(){
+		this.eventTypes = new Set([]);
 		this.listeners = {};
-		this.controls = controls;
-		this.eventTypes = new Set(['control-changed', 'reset']);
-		this.queue = null;
-		controls.forEach((k) => {
-			this.changed[k] = true;
-			this.find_element(k).addEventListener('change', () => {
-				this.control_changed(k);
-			});
-		});
-		this._children = [];
 	}
+
 	/**
 	* Install an event listener similar to pure Javascript.
 	*
@@ -130,6 +112,33 @@ export class SceneObjectABC{
 	}
 	list_event_types(){ return this.eventTypes; }
 	add_event_types(...args){ this.eventTypes = this.eventTypes.union(new Set(args)); }
+}
+
+export class SceneObjectABC extends SceneObjectEvent{
+	constructor(prepend, controls, autoUpdateURL){
+		super();
+		if (autoUpdateURL === undefined){
+			if (this.constructor.autoUpdateURL !== undefined) autoUpdateURL = this.constructor.autoUpdateURL;
+			else autoUpdateURL = true;
+		}
+		this.autoUpdateURL = autoUpdateURL;
+		this.prepend = prepend;
+		this.colormap = {};
+		this.changed = {};
+		this.elements = {};
+		if (controls === undefined) controls = [];
+		this.find_elements(controls);
+		this.controls = controls;
+		this.add_event_types('control-changed', 'reset')
+		this.queue = null;
+		controls.forEach((k) => {
+			this.changed[k] = true;
+			this.find_element(k).addEventListener('change', () => {
+				this.control_changed(k);
+			});
+		});
+		this._children = [];
+	}
 
 	/**
 	* Find DOM element from id. This automatically prepends parent key.

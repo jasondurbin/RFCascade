@@ -3,8 +3,10 @@
  * @import { ColumnUnitHint } from "../column-units.js"
  * @import { BlockHint } from "../blocks.js"
  */
+import {SceneObjectEvent} from "../../scene/scene-abc.js"
+import {ColumnSectionABC} from "./column-sections.js"
 
-export class SysColumnABC{
+export class SysColumnABC extends SceneObjectEvent{
 	static defaults = {
 		'visible': true,
 		'required': true,
@@ -14,25 +16,45 @@ export class SysColumnABC{
 	static plottable = true;
 	static position_fixed = false;
 	static cascade = false;
+	static hideable = true;
+	static section = ColumnSectionABC;
 	/**
 	 * Column constructor
 	 *
 	 * @param {SceneControlSystemCalc} parent
 	 * */
 	constructor(parent){
+		super();
+		this.add_event_types('visibility-changed', 'title-changed');
 		this.parent = parent;
 		this.visible = this.constructor.defaults['visible'];
 		this.required = this.constructor.defaults['required'];
-		this._reformatWaiting = false
+		this._reformatWaiting = false;
+		this.__forceHidden = false;
+		this.addEventListener('title-changed', () => {this.update_header();})
+		this.visibilitySelectors = []
 	}
+	/**
+	 * Return column Section.
+	 *
+	 * @returns {typeof ColumnSectionABC}
+	 * */
+	get section(){ return this.constructor.section; }
 	get plottable(){ return this.constructor.plottable; }
 	get position_fixed(){ return this.constructor.position_fixed; }
+	get hideable(){ return this.constructor.hideable; }
 	get is_cascaded(){ return this.constructor.cascade; }
 	get reformatWaiting(){
 		if (!this.visible) return false;
 		if (this.unit !== null && this.unit.changed) return true;
 		return this._reformatWaiting;
 	}
+	get visible(){ return this._visible; }
+	set visible(vis){
+		this._visible = vis;
+		this.trigger_event('visibility-changed', vis);
+	}
+	get hidden(){ return this.__forceHidden || !this._visible; }
 	load_defaults(){
 		for (const [k, v] of Object.entries(this.constructor.defaults)){
 			this[k] = v;
@@ -42,7 +64,7 @@ export class SysColumnABC{
 	 * Convert block to saveable parameter.
 	 *
 	 * @param {BlockHint} block
-	 * @returns {[String, Any]}
+	 * @returns {[String, Any]} key, value
 	 * */
 	static to_saveable(block){
 		const itype = this.input_type;
@@ -58,7 +80,7 @@ export class SysColumnABC{
 			}
 			v = vi;
 		}
-		else throw Error(`Unknown type ${itype}.`)
+		else throw Error(`Unknown type ${itype}.`);
 		return [this.save_key, v];
 	}
 	/**
@@ -72,13 +94,13 @@ export class SysColumnABC{
 		if (this.save_key === null) throw Error("Cannot load.");
 		if (itype === null) throw Error("Missing type.");
 		let v = pars[this.save_key];
-		if (v === undefined || v === null) return [null, null];
+		if (v === undefined || v === null) return [null, null, null];
 
 		if (itype == 'number') v = Number(v);
 		else if (itype == 'text' || itype == 'color'){}
 		else if (Array.isArray(itype)){
 			v = Number(v);
-			if (v < 0 || v >= itype.length) return [null, null];
+			if (v < 0 || v >= itype.length) return [null, null, null];
 			v = itype[v];
 		}
 		else throw Error(`Unknown type ${itype}.`)
@@ -93,15 +115,51 @@ export class SysColumnABC{
 		this.header = header;
 		this.update_header();
 	}
-	update_header(){ this.header.innerHTML = this.title; }
+	update_header(){
+		if (this.header === undefined) return;
+		this.header.innerHTML = this.title;
+	}
 	get title(){ return this.constructor.title; }
-	get label(){
+	get unit_label(){
 		if (this.unit === null){
 			const unit = this.constructor.unit;
-			if (unit == null || unit == undefined || unit == '') return this.title;
-			return `${this.title} (${unit})`
+			if (unit == null || unit == undefined || unit == '') return '';
+			return unit;
 		}
-		return `${this.title} (${this.unit.selected_unit})`;
+		return this.unit.selected_unit;
+	}
+	get selected_unit(){
+		if (this.unit === null) return null
+		this.__selectedUnit = this.unit.selected_unit;
+		return this.unit.selected_unit;
+	}
+	set selected_unit(u){
+		this.__selectedUnit = u;
+		if (this.unit !== null && this.unit !== undefined) this.unit.selected_unit = u;
+	}
+	get label(){ return `${this.title} (${this.unit_label})`;}
+	/**
+	 * Create a visibility selector and bind it.
+	 *
+	 * @param {HTMLElement} container
+	 * */
+	create_visibility_selector(container){
+		const div = document.createElement("div");
+		const chk = document.createElement("input");
+		const lbl = document.createElement("label");
+		const cid = this.parent.prepend + "-show-" + this.parameter_key;
+		chk.id = cid;
+		chk.setAttribute('name', cid);
+		chk.setAttribute('type', 'checkbox');
+		chk.checked = this.visible;
+		lbl.setAttribute('for', cid);
+		lbl.innerText = this.constructor.title;
+		div.appendChild(chk);
+		div.appendChild(lbl);
+		container.appendChild(div);
+		this.addEventListener('visibility-changed', (v) => { chk.checked = v; });
+		chk.addEventListener('click', () => { this.visible = chk.checked; })
+		this.visibilitySelectors.push(div);
 	}
 	/**
 	 * Create unit for column.
@@ -116,11 +174,15 @@ export class SysColumnABC{
 		else if (typeof(unit) === 'string') container.innerHTML = unit;
 		else{
 			this.unit = new unit(this);
-			const ele = this.unit.build();
+			const ele = this.unit.build(this.constructor.unit_default);
+			if (this.__selectedUnit !== undefined) this.unit.selected_unit = this.__selectedUnit;
 			container.appendChild(ele);
-			ele.setAttribute('id', this.parent.prepend + "-" + this.parameter_key + "-unit")
+			this.unit.addEventListener('change', () => { this._emit_title_change(); });
+			ele.setAttribute('id', this.parent.prepend + "-" + this.parameter_key + "-unit");
+			this._emit_title_change();
 		}
 	}
+	_emit_title_change(){ this.trigger_event('title-changed', this.title); }
 	/**
 	 * Convert value to selected unit and format.
 	 *
@@ -159,5 +221,24 @@ export class SysColumnABC{
 	 * */
 	value(block){
 		return this.convert(block.get_parameter(this.parameter_key))
+	}
+	/**
+	 * Return true if the column should be hidden based on blocks.
+	 *
+	 * @param {Array<BlockHint>} blocks
+	 * */
+	force_hidden(blocks){ return false;}
+	/**
+	 * Perform checks based on input blocks;
+	 *
+	 * @param {Array<BlockHint>} blocks
+	 * */
+	check(blocks){
+		const fc = this.force_hidden(blocks);
+		const st = fc ? 'none' : 'block';
+		this.__forceHidden = fc;
+		this.visibilitySelectors.forEach((v) => {
+			v.style.display = st;
+		})
 	}
 }

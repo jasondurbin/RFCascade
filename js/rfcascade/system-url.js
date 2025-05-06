@@ -1,13 +1,13 @@
 /**
  * @import {BlockHint} from "./blocks.js"
- * @import {SysColumnHint} from "./columns.js"
+ * @import {SysColumnTypeHint} from "./columns.js"
  * @import {SceneControlSystemCalc} from "../index.js"
  */
 import {SysColumns} from "./columns.js"
 import {SysBlocks} from "./blocks.js"
 import {FindSceneURL} from "../scene/scene-util.js";
 
-/** @type {Array<new () => SysColumnHint>} */
+/** @type {Array<SysColumnTypeHint>} */
 const _saveable = [];
 
 const _checks = {'t': true};
@@ -55,7 +55,7 @@ export function save_system(sys){
 
 	const vCols = [];
 	sys.columns.forEach((c) => {
-		vCols.push([c.constructor.uindex, c.visible])
+		vCols.push([c.constructor.uindex, c.visible, c.selected_unit])
 	})
 
 	const plots = [];
@@ -142,15 +142,27 @@ export function load_system_uri(sys, uri){
 		try{
 			const ncols = [];
 			const scols = {};
+			const ocols = {};
 			sys.calc_columns.forEach((c) => {
-				if (c.position_fixed) ncols.push(c);
+				if (c.position_fixed) {
+					ncols.push(c);
+					ocols[c.constructor.uindex] = c;
+				}
 				else scols[c.constructor.uindex] = c;
 			});
-			for (const [k, v] of cdef){
-				if (!scols.hasOwnProperty(k)) continue;
-				ncols.push(scols[k]);
-				scols[k].visible = v;
-				delete scols[k];
+			for (const [k, v, u] of cdef){
+				let c;
+				if (scols.hasOwnProperty(k)){
+					c = scols[k];
+					ncols.push(c);
+					delete scols[k];
+				}
+				else if (ocols.hasOwnProperty(k)){
+					c = ocols[k];
+					delete ocols[k];
+				}
+				c.visible = v;
+				c.selected_unit = u;
 			}
 			sys.calc_columns.forEach((c) => {
 				if (!ncols.includes(c)) ncols.push(c);
