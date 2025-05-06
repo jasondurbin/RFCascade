@@ -16,7 +16,7 @@
  * | typeof SysColumnSignalGain
  * )} ColumnSystemAutoTypeHint
  *
- * @typedef {'signal_power_in' | 'noise_power_in' | 'snr_out' | 'snr_in' | 'signal_gain_ideal'} KeySystemAutoHint
+ * @typedef {'signal_power_in' | 'noise_power_in' | 'snr_out' | 'snr_in' | 'system_signal_gain_ideal'} KeySystemAutoHint
  */
 import {SysColumnABC} from "./columns-abc.js"
 import {ColumnUnitPower, ColumnUnitGain, ColumnUnitNoiseDensity} from "../column-units.js"
@@ -53,8 +53,9 @@ export class SysColumnSignalPowerInIdeal extends SysColumnSystemOutputAuto{
 export class SysColumnSignalGain extends SysColumnSystemOutputAuto{
 	static title = 'Signal Gain';
 	static unit = ColumnUnitGain;
-	static key = 'signal_gain_ideal';
+	static key = 'system_signal_gain_ideal';
 	static uindex = 202;
+	static cascade = true;
 }
 
 export class SysColumnNoisePowerIn extends SysColumnSystemOutputAuto{
@@ -70,6 +71,7 @@ export class SysColumnSNROut extends SysColumnSystemOutputAuto{
 	static unit = ColumnUnitGain;
 	static key = 'snr_out';
 	static uindex = 204;
+	static cascade = true;
 }
 
 export class SysColumnSNRIn extends SysColumnSystemOutputAuto{
