@@ -140,8 +140,9 @@ export class ColumnUnitPower extends ColumnUnitABC{
 export class ColumnUnitTemperature extends ColumnUnitABC{
 	static baseUnit = 'K';
 	static unit_definitions = {
-		'K': [(v) => v, 			(v) => v],
-		'C': [(v) => v - 273.15, 	(v) => v + 273.15],
+		'K':   [(v) => v, 					(v) => v],
+		'C':   [(v) => v - 273.15, 			(v) => v + 273.15],
+		'dBK': [(v) => 10*Math.log10(v), 	(v) => 10**(v/10)],
 	}
 	get allowEngineeringNotation(){ return true; }
 }
@@ -176,6 +177,15 @@ export class ColumnUnitNoiseDensity extends ColumnUnitABC{
 	static unit_definitions = {
 		'W/Hz': 	[(v) => v, 				  	   (v) => v],
 		'dBm/Hz': 	[(v) => 10*Math.log10(v) + 30, (v) => 10**((v-30)/10)],
+	}
+	get allowEngineeringNotation(){ return true; }
+}
+
+export class ColumnUnitGoverT extends ColumnUnitABC{
+	static baseUnit = 'dB/K';
+	static unit_definitions = {
+		'1/K':   [(v) => v, 			   (v) => v],
+		'dB/K':  [(v) => 10*Math.log10(v), (v) => 10**(v/10.)],
 	}
 	get allowEngineeringNotation(){ return true; }
 }
