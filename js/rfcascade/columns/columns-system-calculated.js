@@ -6,6 +6,9 @@
  * | SysColumnSystemOIP2
  * | SysColumnSystemOIP3
  * | SysColumnSystemOP1dB
+ * | SysColumnSystemElementCount
+ * | SysColumnSystemSinglePathGain
+ * | SysColumnSystemArrayGain
  * )} ColumnSystemCalculationHint
  *
  * @typedef {(
@@ -14,9 +17,21 @@
  * | typeof SysColumnSystemOIP2
  * | typeof SysColumnSystemOIP3
  * | typeof SysColumnSystemOP1dB
+ * | typeof SysColumnSystemElementCount
+ * | typeof SysColumnSystemSinglePathGain
+ * | typeof SysColumnSystemArrayGain
  * )} ColumnSystemCalculationTypeHint
  *
- * @typedef {'signal_power_out' | 'noise_power_out' | 'system_oip3' | 'system_oip2' | 'system_op1db'} KeySystemCalculationHint
+ * @typedef {(
+ *   'signal_power_out'
+ * | 'noise_power_out'
+ * | 'system_oip3'
+ * | 'system_oip2'
+ * | 'system_op1db'
+ * | 'system_element_count'
+ * | 'system_single_path_gain'
+ * | 'system_array_gain'
+ * )} KeySystemCalculationHint
  */
 import {SysColumnABC} from "./columns-abc.js"
 import {ColumnUnitPower, ColumnUnitGain, ColumnUnitNoiseDensity} from "../column-units.js"
@@ -54,7 +69,7 @@ export class SysColumnSignalPowerOutIdeal extends SysColumnSystemOutput{
 		node.signal_power_ideal = p*block.get_parameter('signal_power_gain');
 		this.update(block, node.signal_power_ideal);
 		block.add_cascade_parameter('signal_power_in', p);
-		block.add_cascade_parameter('signal_gain_ideal', node.signal_power_ideal/node.signal_power_in);
+		block.add_cascade_parameter('system_signal_gain_ideal', node.signal_power_ideal/node.signal_power_in);
 	}
 }
 
@@ -67,13 +82,16 @@ export class SysColumnNoisePowerOut extends SysColumnSystemOutput{
 
 	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
 	calculate_element(node, block){
-		const t = block.get_parameter('noise_temperature');
-		const g = block.get_parameter('noise_power_gain');
-		const p =  g*(node.kb * t + node.noise_power);
+		const p1 = block.coherent_noise_power_contribution(node);
 		block.add_cascade_parameter('noise_power_in', node.noise_power);
-		node.noise_power = p;
-		this.update(block, p);
+		node.noise_power = p1;
+		this.update(block, p1);
 		block.add_cascade_parameter('snr_out', node.snr_ideal);
+
+		const p2 = block.spg_noise_power_contribution(node);
+		block.add_cascade_parameter('noise_power_in_spg', node.noise_power_spg);
+		node.noise_power_spg = p2;
+		block.add_cascade_parameter('snr_out_spg', node.snr_ideal_spg);
 	}
 }
 
@@ -158,19 +176,54 @@ export class SysColumnSystemOIP2 extends SysColumnSystemOutput{
 	}
 }
 
-export class SysColumnSystemApertureGain extends SysColumnSystemOutput{
-	static title = 'Cascaded Aperture Gain';
-	static unit = ColumnUnitGain;
-	static key = 'system_aperture_gain';
+export class SysColumnSystemElementCount extends SysColumnSystemOutput{
+	static title = 'Device Quantity';
+	static unit = '';
+	static key = 'system_element_count';
+	static number_type = 'int';
 	static uindex = 107;
 	static cascade = true;
 
 	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
 	calculate_element(node, block){
-		const p1 = node.aperture_gain;
-		const p2 = block.get_parameter('aperture_gain');
-		node.aperture_gain = p1*p2;
-		block.add_cascade_parameter('aperture_gain_in', p1);
-		this.update(block, node.aperture_gain);
+		const p1 = node.element_count;
+		const p2 = block.get_parameter('element_count');
+		node.element_count = p1*p2;
+		block.add_cascade_parameter('element_count_in', p1);
+		block.add_cascade_parameter('negative_noise_figure_in', node.negative_noise_figure);
+		this.update(block, node.element_count);
+		node.negative_noise_figure *= block.get_parameter('negative_noise_figure');
+	}
+}
+
+export class SysColumnSystemSinglePathGain extends SysColumnSystemOutput{
+	static title = 'Cascaded Single Path Gain';
+	static unit = ColumnUnitGain;
+	static key = 'system_single_path_gain';
+	static uindex = 108;
+	static cascade = true;
+
+	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
+	calculate_element(node, block){
+		block.add_cascade_parameter('snr_in_spg', node.snr_ideal_spg);
+		node.signal_power_spg_ideal *= block.get_parameter('single_path_gain');
+		this.update(block, node.signal_power_spg_ideal/node.signal_power_in);
+	}
+	/** @inheritdoc @type {SysColumnSystemCascade['force_hidden']} */
+	force_hidden(blocks){ return this.parent.globals.is_tx(); }
+}
+
+export class SysColumnSystemArrayGain extends SysColumnSystemOutput{
+	static title = 'Cascaded Array Gain';
+	static unit = ColumnUnitGain;
+	static key = 'system_array_gain';
+	static uindex = 109;
+	static cascade = true;
+
+	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
+	calculate_element(node, block){
+		block.add_cascade_parameter('array_gain_in', node.array_gain);
+		node.array_gain *= block.get_parameter('array_gain');
+		this.update(block, node.array_gain);
 	}
 }
