@@ -67,6 +67,8 @@ export class SceneSystemGlobals extends SceneControl{
 	static build(parent, container){
 		const obj = new SceneSystemGlobals(parent);
 		const tbl = document.createElement('table');
+		const units = {};
+		const vars = {};
 		container.appendChild(tbl)
 
 		const create_row = (id, inputType, unit) => {
@@ -108,6 +110,8 @@ export class SceneSystemGlobals extends SceneControl{
 			tunit.selected_unit = 'C';
 			tsel.value = 16.85;
 		})
+		units['t'] = tunit;
+		vars['t'] = tsel;
 
 		const funit = new ColumnUnitFrequency(this, 'MHz');
 		const [flbl, fsel] = create_row('system-bandwidth', 'input', funit);
@@ -121,6 +125,8 @@ export class SceneSystemGlobals extends SceneControl{
 			funit.selected_unit = 'MHz';
 			fsel.value = 1.0;
 		})
+		units['f'] = funit;
+		vars['f'] = fsel;
 
 		const punit = new ColumnUnitPower(this, 'dBm');
 		const [plbl, psel] = create_row('system-input-power', 'input', punit);
@@ -134,6 +140,8 @@ export class SceneSystemGlobals extends SceneControl{
 			punit.selected_unit = 'dBm';
 			psel.value = -10;
 		})
+		units['p'] = punit;
+		vars['p'] = psel;
 
 		const nunit = new ColumnUnitTemperature(this, 'K');
 		const [nlbl, nsel] = create_row('system-noise-temperature', 'input', nunit);
@@ -147,6 +155,8 @@ export class SceneSystemGlobals extends SceneControl{
 			nunit.selected_unit = 'K';
 			nsel.value = 290;
 		})
+		units['n'] = nunit;
+		vars['n'] = nsel;
 
 		const [dlbl, dsel] = create_row('system-direction', 'select');
 		const opt1 = document.createElement('option');
@@ -162,11 +172,46 @@ export class SceneSystemGlobals extends SceneControl{
 		obj.__resets.push(() => {
 			opt1.selected = true;
 		})
+		vars['d'] = dsel;
+
+		obj.load = (config) => {
+			try{
+				for (const [k, s] of Object.entries(vars)){
+					const v = config[k];
+					if (v === undefined) continue;
+					s.value = v;
+				}
+				for (const [k, s] of Object.entries(units)){
+					const v = config[k + "u"];
+					if (v === undefined) continue;
+					s.selected_unit = v;
+				}
+			}
+			catch (e){
+				console.log(e);
+			}
+		}
+
+		obj.save_parameters = () => {
+			const res = {};
+			for (const [k, s] of Object.entries(vars)){
+				let v = s.value;
+				if (s.getAttribute('type', 'Number')) v = Number(v);
+				res[k] = v;
+			}
+			for (const [k, v] of Object.entries(units)){
+				res[k+"u"] = v.selected_unit;
+			}
+			return res;
+		}
 		return obj;
 	}
 	reset(){
 		this.__resets.forEach(c => c());
 		this.parent.request_redraw();
+	}
+	save_parameters(){
+		return {};
 	}
 }
 

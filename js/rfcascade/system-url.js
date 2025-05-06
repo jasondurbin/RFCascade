@@ -65,6 +65,7 @@ export function save_system(sys){
 
 	config['c'] = vCols;
 	config['p'] = plots;
+	config['g'] = sys.globals.save_parameters();
 	url.set_param('s', btoa(JSON.stringify(config)));
 }
 
@@ -132,6 +133,13 @@ export function load_system_uri(sys, uri){
 			return null;
 		}
 	}
+	const _globs = (config) => {
+		try{ return config['g']; }
+		catch(e){
+			console.log(e);
+			return null;
+		}
+	}
 	const _cols = (config) => {
 		let cdef;
 		try{ cdef = config['c']; }
@@ -178,6 +186,8 @@ export function load_system_uri(sys, uri){
 	if (uri !== null){
 		const config = _parse(uri);
 		if (config !== null) {
+			let globs = _globs(config);
+			sys.globals.load(globs);
 			blocks = _blocks(config);
 			let vcols = _cols(config);
 			if (vcols !== null) sys.columns = vcols;
