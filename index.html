@@ -42,15 +42,19 @@
 		<br>
 	</div>
 	<div class="container-full">
-		<button id="sys-reset">Reset</button>
-		<button id="sys-reset-columns">Reset Columns</button>
-		<button id="sys-reset-colors">Reset Colors</button>
-		<button id="sys-reset-globals">Reset Globals</button>
-		<br />
+		<div class="sys-config-controls">
+			<div class="reset-buttons">
+				<h2>Reset</h2>
+				<div><button id="sys-reset-columns">Reset Columns</button><span>Reset column order and visibility.</span></div>
+				<div><button id="sys-reset-colors">Reset Colors</button><span>Reset block colors.</span></div>
+				<div><button id="sys-reset-globals">Reset Globals</button><span>Reset globals to defaults.</span></div>
+				<div><button id="sys-reset">Reset All</button><span>Reset all above, clear line-up, and create one to match current direction.</span></div>
+			</div>
+			<div id="sys-globals"><h2>System Globals</h2></div>
+			<div id="sys-visibility-controls" class="visibility-controls"><h2>Visible Columns</h2></div>
+		</div>
 		<select id="sys-add-type-selection"></select>
 		<button id="sys-add-type">Add</button>
-		<div id="sys-globals"></div>
-		<div id="sys-visibility-controls" class="visibility-controls"></div>
 		<div id="sys-container"></div>
 		<button id="sys-add-plot">Add Plot</button>
 	</div>

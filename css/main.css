@@ -271,8 +271,46 @@ input[type='color']{
 	overflow-x: auto;
 	padding: 10px 0;
 }
-.visibility-controls{
-	border: 1px solid rgb(13, 135, 235);
+.visibility-controls,
+#sys-globals,
+.reset-buttons{
+	border: 1px solid var(--settings-border-color);
+	background-color: var(--settings-bg-color);
+	margin: 4px;
+	box-sizing: border-box;
+	padding: 4px;
+	font-size: 0.9em;
+}
+.reset-buttons button{
+	margin: 0px;
+	max-width: 100px;
+	min-width: 100px;
+	display: block;
+	margin: 0 4px;
+	cursor: pointer;
+}
+.reset-buttons > div{
+	max-width: 300px;
+	display: flex;
+	margin: 4px;
+}
+.reset-buttons span{
+	display: block;
+	font-size: 0.9em;
+	margin: auto 0;
+	text-align: left;
+}
+.sys-config-controls{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	justify-content: center;
+	width: 100%;
+	margin: 5px 0 5px 0;
+}
+h2{
+	margin: 0px;
+	padding: 4px;
 }
 .visibility-selectors{
 	display: flex;
@@ -281,13 +319,14 @@ input[type='color']{
 	gap: 4px;
 }
 .visibility-controls > div{
-	border: 1px solid rgb(13, 135, 235);
-	margin: 2px;
+	margin: 4px;
 	box-sizing: border-box;
 	padding: 2px;
 }
 .visibility-controls h4{
 	margin: 0px;
+	border-bottom: 1px solid var(--settings-border-color);
+	margin-bottom: 2px;
 }
 .visibility-selectors div{
 	transition: 0.3s;
