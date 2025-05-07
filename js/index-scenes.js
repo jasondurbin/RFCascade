@@ -191,7 +191,6 @@ export class SceneSystemGlobals extends SceneControl{
 				console.log(e);
 			}
 		}
-
 		obj.save_parameters = () => {
 			const res = {};
 			for (const [k, s] of Object.entries(vars)){
