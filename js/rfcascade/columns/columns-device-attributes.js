@@ -17,6 +17,7 @@
  * @typedef {'title' | 'index'} KeyDeviceAttributeHint
 */
 import {SysColumnABC} from "./columns-abc.js"
+import {ColumnSectionDeviceInput} from "./column-sections.js"
 
 export class SysColumnDeviceAttr extends SysColumnABC{
 	static type = 'attribute';
@@ -24,6 +25,7 @@ export class SysColumnDeviceAttr extends SysColumnABC{
 	static uindex = 0;
 	static position_fixed = true;
 	static hideable = false;
+	static section = ColumnSectionDeviceInput;
 }
 
 export class SysColumnDeviceType extends SysColumnDeviceAttr{
@@ -31,6 +33,7 @@ export class SysColumnDeviceType extends SysColumnDeviceAttr{
 	static unit = null;
 	static key = 'title';
 	static uindex = 1;
+	static hideable = true;
 }
 
 export class SysColumnDeviceItem extends SysColumnDeviceAttr{
@@ -38,7 +41,6 @@ export class SysColumnDeviceItem extends SysColumnDeviceAttr{
 	static unit = null;
 	static key = 'index';
 	static uindex = 2;
-	static hideable = false;
 }
 
 export class SysColumnDeviceMove extends SysColumnDeviceAttr{
@@ -47,7 +49,6 @@ export class SysColumnDeviceMove extends SysColumnDeviceAttr{
 	static unit = null;
 	static key = null;
 	static uindex = 3;
-	static hideable = false;
 }
 export class SysColumnDeviceDelete extends SysColumnDeviceAttr{
 	static type = 'remove';
@@ -55,7 +56,6 @@ export class SysColumnDeviceDelete extends SysColumnDeviceAttr{
 	static unit = null;
 	static key = null;
 	static uindex = 4;
-	static hideable = false;
 }
 
 export class SysColumnDeviceIcon extends SysColumnDeviceAttr{
@@ -64,7 +64,8 @@ export class SysColumnDeviceIcon extends SysColumnDeviceAttr{
 	static unit = null;
 	static key = null;
 	static uindex = 5;
-	static hideable = false;
+	static hideable = true;
+	static selector_title = "Symbol";
 }
 
 export const ColumnDeviceAttribute = [
