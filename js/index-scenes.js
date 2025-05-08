@@ -59,6 +59,12 @@ export class SceneSystemGlobals extends SceneControl{
 	 * */
 	is_rx(){ throw Error("Should be overriden."); }
 	/**
+	 * Return active CMAP.
+	 *
+	 * @returns {(v: Number) => String}
+	 * */
+	cmap(){ throw Error("Should be overriden."); }
+	/**
 	 * Auto-build global scene.
 	 *
 	 * @param {SceneControlSystemCalc} parent
@@ -96,83 +102,105 @@ export class SceneSystemGlobals extends SceneControl{
 			}
 			td1.appendChild(lbl);
 			td2.appendChild(inp);
-			return [lbl, inp];
+			return {
+				'lbl': lbl,
+				'inp': inp,
+				'td3': td3,
+				'td2': td2,
+			}
 		}
 		const tunit = new ColumnUnitTemperature(this, 'C');
-		const [tlbl, tsel] = create_row('system-temperature', 'input', tunit);
-		tsel.setAttribute('type', 'number');
-		tsel.value = 16.85;
-		tsel.addEventListener('change', () => {parent.request_redraw();})
+		const tres = create_row('system-temperature', 'input', tunit);
+		tres.inp.setAttribute('type', 'number');
+		tres.inp.value = 16.85;
+		tres.inp.addEventListener('change', () => {parent.request_redraw();})
 		tunit.addEventListener('change', () => {parent.request_redraw();})
-		obj.system_temperature = () => { return tunit.convert_from(Number(tsel.value)); }
-		tlbl.innerHTML = 'System Temperature';
+		obj.system_temperature = () => { return tunit.convert_from(Number(tres.inp.value)); }
+		tres.lbl.innerHTML = 'System Temperature';
 		obj.__resets.push(() => {
 			tunit.selected_unit = 'C';
-			tsel.value = 16.85;
+			tres.inp.value = 16.85;
 		})
 		units['t'] = tunit;
-		vars['t'] = tsel;
+		vars['t'] = tres.inp;
 
 		const funit = new ColumnUnitFrequency(this, 'MHz');
-		const [flbl, fsel] = create_row('system-bandwidth', 'input', funit);
-		fsel.setAttribute('type', 'number');
-		fsel.value = 1;
-		fsel.addEventListener('change', () => {parent.request_redraw();})
+		const fres = create_row('system-bandwidth', 'input', funit);
+		fres.inp.setAttribute('type', 'number');
+		fres.inp.value = 1;
+		fres.inp.addEventListener('change', () => {parent.request_redraw();})
 		funit.addEventListener('change', () => { parent.request_redraw(); })
-		obj.bandwidth = () => { return funit.convert_from(Number(fsel.value)); }
-		flbl.innerHTML = 'Bandwidth';
+		obj.bandwidth = () => { return funit.convert_from(Number(fres.inp.value)); }
+		fres.lbl.innerHTML = 'Bandwidth';
 		obj.__resets.push(() => {
 			funit.selected_unit = 'MHz';
-			fsel.value = 1.0;
+			fres.inp.value = 1.0;
 		})
 		units['f'] = funit;
-		vars['f'] = fsel;
+		vars['f'] = fres.inp;
 
 		const punit = new ColumnUnitPower(this, 'dBm');
-		const [plbl, psel] = create_row('system-input-power', 'input', punit);
-		psel.setAttribute('type', 'number');
-		psel.value = -10;
-		psel.addEventListener('change', () => {parent.request_redraw();})
+		const pres = create_row('system-input-power', 'input', punit);
+		pres.inp.setAttribute('type', 'number');
+		pres.inp.value = -10;
+		pres.inp.addEventListener('change', () => {parent.request_redraw();})
 		punit.addEventListener('change', () => {parent.request_redraw();})
-		obj.input_power = () => { return punit.convert_from(Number(psel.value)); }
-		plbl.innerHTML = 'Input Power';
+		obj.input_power = () => { return punit.convert_from(Number(pres.inp.value)); }
+		pres.lbl.innerHTML = 'Input Power';
 		obj.__resets.push(() => {
 			punit.selected_unit = 'dBm';
-			psel.value = -10;
+			pres.inp.value = -10;
 		})
 		units['p'] = punit;
-		vars['p'] = psel;
+		vars['p'] = pres.inp;
 
 		const nunit = new ColumnUnitTemperature(this, 'K');
-		const [nlbl, nsel] = create_row('system-noise-temperature', 'input', nunit);
-		nsel.setAttribute('type', 'number');
-		nsel.value = 290;
-		nsel.addEventListener('change', () => {parent.request_redraw();})
+		const nres = create_row('system-noise-temperature', 'input', nunit);
+		nres.inp.setAttribute('type', 'number');
+		nres.inp.value = 290;
+		nres.inp.addEventListener('change', () => {parent.request_redraw();})
 		nunit.addEventListener('change', () => {parent.request_redraw();})
-		obj.noise_temperature_input = () => { return nunit.convert_from(Number(nsel.value)); }
-		nlbl.innerHTML = 'Input Noise Temperature';
+		obj.noise_temperature_input = () => { return nunit.convert_from(Number(nres.inp.value)); }
+		nres.lbl.innerHTML = 'Input Noise Temperature';
 		obj.__resets.push(() => {
 			nunit.selected_unit = 'K';
-			nsel.value = 290;
+			nres.inp.value = 290;
 		})
 		units['n'] = nunit;
-		vars['n'] = nsel;
+		vars['n'] = nres.inp;
 
-		const [dlbl, dsel] = create_row('system-direction', 'select');
+		const dres = create_row('system-direction', 'select');
 		const opt1 = document.createElement('option');
 		const opt2 = document.createElement('option');
 		opt1.innerHTML = 'RX';
 		opt2.innerHTML = 'TX';
-		dsel.appendChild(opt1);
-		dsel.appendChild(opt2);
-		dsel.addEventListener('change', () => {parent.request_redraw();})
+		dres.inp.appendChild(opt1);
+		dres.inp.appendChild(opt2);
+		dres.inp.addEventListener('change', () => {parent.request_redraw();})
 		obj.is_tx = () => { return opt2.selected; }
 		obj.is_rx = () => { return opt1.selected; }
-		dlbl.innerHTML = 'System Direction';
+		dres.lbl.innerHTML = 'System Direction';
 		obj.__resets.push(() => {
 			opt1.selected = true;
 		})
-		vars['d'] = dsel;
+		vars['d'] = dres.inp;
+
+		const cres = create_row('system-symbol-color', 'select');
+		const cmap = parent.create_listed_colormap_selector('system-symbol-color', 'Vibrant')
+		cres.inp.addEventListener('change', () => { parent.cmap = cmap.cmap(true); })
+		cres.lbl.innerHTML = 'Symbol Color Scheme';
+		obj.__resets.push(() => {
+			cres.inp.value = "Vibrant";
+		})
+		obj.cmap = () => { return cmap.cmap(true); }
+
+		const but = document.createElement("button")
+		but.innerText = "Reset Colors";
+		but.id = parent.prepend + "-reset-colors";
+		cres.td2.setAttribute('colspan', 2);
+		cres.td2.appendChild(but);
+		cres.td3.remove();
+		vars['c'] = cres.inp;
 
 		obj.load = (config) => {
 			try{
@@ -225,12 +253,13 @@ export class SceneSystemPlot extends ScenePlot1D{
 	 * */
 	constructor(parent, element, counter, loadPars){
 		const pre = "plot-" + String(counter);
-		const cmk = pre + "-colormap";
 		const chc = document.createElement('select');
+		const lbl1 = document.createElement('label');
 		const div1 = document.createElement('div');
 		const div2 = document.createElement('div')
 		const div3 = document.createElement('div');
 		const but1 = document.createElement('button');
+		const axis = {};
 
 		parent.columns.forEach((c) => {
 			if (!c.plottable) return;
@@ -240,6 +269,81 @@ export class SceneSystemPlot extends ScenePlot1D{
 			opt.setAttribute('data-cls', c.constructor.name);
 			opt.setAttribute('data-uindex', c.constructor.uindex);
 		})
+		const _create_colormap = (pre) => {
+			const div = document.createElement('div');
+			const lbl = document.createElement('label');
+			const sel = document.createElement('select');
+			const cmk = pre + "-colormap"
+
+			lbl.setAttribute('for', cmk);
+			sel.id = cmk;
+			sel.setAttribute('name', cmk);
+			sel.addEventListener('change', () => {
+				this.needsSave = true;
+			});
+			lbl.innerText = "Colormap";
+			div.appendChild(lbl);
+			div.appendChild(document.createElement("br"));
+			div.appendChild(sel);
+			return div;
+		}
+		const _create_scale_controls = (pre) => {
+			const div = document.createElement('div');
+			const chk1 = document.createElement("input");
+			const lbl1 = document.createElement("label");
+			const mina = document.createElement("input");
+			const lbl2 = document.createElement("label");
+			const maxa = document.createElement("input");
+			const lbl3 = document.createElement("label");
+			const step = document.createElement("input");
+			const lbl4 = document.createElement("label");
+			const chk2 = document.createElement("input");
+			const lbl5 = document.createElement("label");
+			/**
+			 * @param {HTMLInputElement} inp
+			 * @param {HTMLLabelElement} lbl
+			 * @param {String} title
+			 * @param {String} itype
+			 * */
+			const _lbl = (inp, lbl, title, itype) => {
+				const div2 = document.createElement('div');
+				if (itype === undefined) itype = 'number';
+				const nkey = pre + "-" + title.replace(" ", "-").toLowerCase();
+				inp.setAttribute('type', itype);
+				inp.setAttribute('name', nkey);
+				inp.id = nkey;
+				lbl.innerText = title;
+				lbl.setAttribute('for', nkey);
+				lbl.style = "user-select: none; cursor: pointer;";
+				if (itype == 'checkbox'){
+					div2.appendChild(inp);
+					div2.appendChild(lbl);
+				}
+				else{
+					div2.appendChild(lbl);
+					div2.appendChild(document.createElement("br"));
+					div2.appendChild(inp);
+				}
+				div.appendChild(div2);
+				return div2;
+			}
+			_lbl(mina, lbl2, 'Min Y');
+			_lbl(maxa, lbl3, 'Max Y');
+			let ldiv = _lbl(chk1, lbl1, 'Auto Scale', 'checkbox');
+			ldiv.style = "white-space: nowrap; margin: auto 0;"
+			_lbl(step, lbl4, 'Y Steps');
+			ldiv = _lbl(chk2, lbl5, 'Auto Steps', 'checkbox');
+			ldiv.style = "white-space: nowrap; margin: auto 0;"
+			axis['auto_scale'] = chk1;
+			axis['min'] = mina;
+			axis['max'] = maxa;
+			axis['steps'] = step;
+			axis['auto_steps'] = chk2;
+			chk1.checked = true;
+			chk2.checked = true;
+			div.classList = "system-plot-y-axis-controls";
+			return div;
+		}
 
 		chc.addEventListener('change', () => {
 			this.needsSave = true;
@@ -248,40 +352,34 @@ export class SceneSystemPlot extends ScenePlot1D{
 		but1.addEventListener('click', () => {
 			this.needsDelete = true;
 		})
-		but1.innerHTML = 'Remove Plot';
+		but1.innerHTML = 'Remove';
+		but1.classList = "plot-button-remove"
 
 		chc.id = parent.prepend + "-" + pre + "-choice";
-		div1.class = "canvas-header";
+		lbl1.setAttribute('for', chc.id);
+		lbl1.innerText = "Parameter to Plot"
+		div1.classList = "canvas-header";
+
+		div1.appendChild(lbl1);
+		div1.appendChild(chc);
+		div1.appendChild(but1);
 
 		element.appendChild(div1);
 		element.appendChild(div2);
 		element.appendChild(div3);
 
+		const prefix = parent.prepend + "-" + pre;
 		div2.classList = "canvas-wrapper";
 		const canvas = document.createElement("canvas");
-		canvas.id = parent.prepend + "-" + pre;
+		canvas.id = prefix;
 		div2.appendChild(canvas);
 
+		div3.appendChild(_create_colormap(prefix));
+		div3.appendChild(_create_scale_controls(prefix));
 		div3.classList = "canvas-footer";
 
-		const div4 = document.createElement('div');
-		const lbl = document.createElement('label');
-		const sel = document.createElement('select');
-
-		lbl.setAttribute('for', parent.prepend + "-" + cmk);
-		sel.id = parent.prepend + "-" + cmk;
-		sel.setAttribute('name', parent.prepend + "-" + cmk);
-		sel.addEventListener('change', () => {
-			this.needsSave = true;
-		});
-
-		div4.appendChild(chc);
-		div4.appendChild(lbl);
-		div4.appendChild(sel);
-		div4.appendChild(but1);
-
-		div3.appendChild(div4);
-		super(parent, canvas, cmk);
+		super(parent, canvas, pre + "-colormap");
+		this.install_axis_controls('y', axis);
 		this.needsDelete = false;
 		this.needsUpdate = true;
 		this.needsSave = true;
@@ -297,11 +395,21 @@ export class SceneSystemPlot extends ScenePlot1D{
 			for (let i = 0; i < chc.length; i++){
 				if (chc[i].getAttribute('data-uindex') == skey) chc[i].setAttribute('selected', true);
 			}
+			this.load_axis_config('y', loadPars[2]);
 		}
+		this.addEventListener("axis-controls-change", () => {this.needsSave = true; })
+		window.addEventListener('resize', (e) => {
+			const m = this.get_magnification();
+			if (m != this.magnification) this.redrawWaiting = true;
+		});
 	}
 	get save_parameters(){
 		this.needsSave = false;
-		return [this.active_column().constructor.uindex, this.selected_cmap()]
+		return [
+			this.active_column().constructor.uindex,
+			this.selected_cmap(),
+			this.save_axis_config('y')
+		]
 	}
 	/**
 	 * Find and return selected column
@@ -322,6 +430,10 @@ export class SceneSystemPlot extends ScenePlot1D{
 			return kls;
 		}
 		return cols[0];
+	}
+	get_magnification(){
+		if (this.canvas.clientWidth > 800) return 1;
+		return Math.max(1, Math.min(2, 800/this.canvas.clientWidth));
 	}
 	draw(){
 		const col = this.active_column();
@@ -350,8 +462,9 @@ export class SceneSystemPlot extends ScenePlot1D{
 		}
 
 		this.reset();
+		this.magnification = this.get_magnification();
 		this.set_xgrid(x[0], xc-1, xc);
-		this.set_ygrid(minY, maxY, 11);
+		this.config_auto_y(minY, maxY, 11);
 		this.add_data(x, y, null, {'markers': true});
 		this.set_ylabel(col.label);
 		this.needsUpdate = false;
@@ -388,14 +501,14 @@ export class SceneSystemPlot extends ScenePlot1D{
 			ctx.save();
 			ctx.textBaseline = 'middle';
 			ctx.textAlign = 'left';
-			ctx.translate(sect[i], minY+textPadding+ICO_SIZE)
+			ctx.translate(sect[i], minY+textPadding+ICO_SIZE);
 			ctx.rotate(45*Math.PI/180);
 			//ctx.fillStyle = blocks[i].get_parameter('color');
 			ctx.fillText(blocks[i].get_parameter('part_number'), 0, 0);
 			ctx.restore();
 
 			ctx.save();
-			ctx.translate(sect[i], minY+textPadding)
+			ctx.translate(sect[i], minY+textPadding);
 			ctx.scale(ICO_SIZE, ICO_SIZE);
 			ctx.translate(-0.5, 0);
 			ctx.lineWidth = 1/25;
