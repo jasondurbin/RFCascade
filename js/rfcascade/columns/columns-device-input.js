@@ -9,6 +9,8 @@
  * | SysColumnDeviceTemperatureOffset
  * | SysColumnDeviceIP3
  * | SysColumnDeviceIP2
+ * | SysColumnDeviceSymbol
+ * | SysColumnDeviceLegs
  * )} ColumnDeviceInputHint
  *
  * @typedef {(
@@ -21,12 +23,15 @@
  * | typeof SysColumnDeviceTemperatureOffset
  * | typeof SysColumnDeviceIP3
  * | typeof SysColumnDeviceIP2
+ * | typeof SysColumnDeviceSymbol
+ * | typeof SysColumnDeviceLegs
  * )} ColumnDeviceInputTypeHint
  *
- * @typedef {'gain' | 'noise_figure' | 'part_number' | 'p1db' | 'linearity' | 'color' | 'ip3' | 'ip2' | 'temperature_offset' | 'io_count'} KeyDeviceInputHint
+ * @typedef {'gain' | 'noise_figure' | 'part_number' | 'p1db' | 'linearity' | 'color' | 'ip3' | 'ip2' | 'temperature_offset' | 'io_count' | 'symbol'} KeyDeviceInputHint
 */
 import {SysColumnABC} from "./columns-abc.js"
 import {ColumnSectionDeviceInput} from "./column-sections.js"
+import {Symbols} from "../symbols.js";
 
 export class SysColumnDeviceInput extends SysColumnABC{
 	static type = 'input';
@@ -79,6 +84,7 @@ export class SysColumnDeviceLinearity extends SysColumnDeviceInput{
 	static input_type = ['Ignore', 'Output Referred', 'Input Referred'];
 	static save_key = 'l';
 	static uindex = 22;
+	static plottable = false;
 }
 
 export class SysColumnDeviceP1dB extends SysColumnDeviceInput{
@@ -138,8 +144,21 @@ export class SysColumnDeviceLegs extends SysColumnDeviceInput{
 	}
 }
 
+const sms = []
+for (let i = 0; i < Symbols.length; i++) sms.push(Symbols[i][0]);
+export class SysColumnDeviceSymbol extends SysColumnDeviceInput{
+	static title = 'Symbol';
+	static unit = '';
+	static key = 'symbol';
+	static input_type = sms;
+	static save_key = 's';
+	static uindex = 28;
+	static plottable = false;
+}
+
 export const ColumnDeviceInput = [
 	SysColumnDeviceColor,
+	SysColumnDeviceSymbol,
 	SysColumnDevicePartNumber,
 	SysColumnDeviceLegs,
 	SysColumnDeviceGain,
