@@ -56,7 +56,7 @@ export class ScenePlotFarfield2D extends ScenePlotABC{
 	}
 	rescale(){
 		if (!this.isValid) return;
-		const logMin = -this.min;
+		const logMin = -this.y_min;
 		const ff = this.ff
 		const [p1, p2] = ff.meshPoints;
 		this.farfield_log_scale = new Array(p2);

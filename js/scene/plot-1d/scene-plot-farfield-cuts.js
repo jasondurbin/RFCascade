@@ -10,7 +10,7 @@ export class ScenePlotFarfieldCuts extends ScenePlot1D{
 		this.addEventListener('data-min-changed',() => {
 			this.draw();
 		})
-		this.min = -40;
+		this.y_min = -40;
 		this.engine = new FarfieldCutEngineSpherical(this);
 	}
 	/**
@@ -64,7 +64,7 @@ export class FarfieldCutEngineSpherical extends FarfieldCutEngineABC{
 		this.parent.set_xlabel('Theta (deg)');
 		this.parent.set_ylabel('Relative Directivity (dB)');
 		this.parent.set_xgrid(-90, 90, 13);
-		this.parent.set_ygrid(this.parent.min, 0, 11);
+		this.parent.set_ygrid(this.parent.y_min, 0, 11);
 	}
 	draw(){
 		const ff = this.ff;
@@ -93,7 +93,7 @@ export class FarfieldCutEngineUV extends FarfieldCutEngineABC{
 			xmax = ff.u[ff.u.length - 1]
 		}
 		this.parent.set_xgrid(xmin, xmax, 11);
-		this.parent.set_ygrid(this.parent.min, 0, 11);
+		this.parent.set_ygrid(this.parent.y_min, 0, 11);
 		this.parent.set_xgrid_points(1);
 	}
 	draw(){
@@ -123,7 +123,7 @@ export class FarfieldCutEngineLudwig3 extends FarfieldCutEngineABC{
 		this.parent.set_xlabel('Az/El (deg)');
 		this.parent.set_ylabel('Relative Directivity (dB)');
 		this.parent.set_xgrid(-90, 90, 13);
-		this.parent.set_ygrid(this.parent.min, 0, 11);
+		this.parent.set_ygrid(this.parent.y_min, 0, 11);
 		this.parent.set_xgrid_points(0);
 		this.parent.set_ygrid_points(0);
 	}
