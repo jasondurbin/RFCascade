@@ -46,9 +46,10 @@ export class SysColumnDevicePartNumber extends SysColumnDeviceInput{
 	static unit = '';
 	static key = 'part_number';
 	static input_type = 'text';
-	static save_key = 'p';
+	static save_key = 4;
 	static plottable = false;
 	static uindex = 11;
+	static description = "Device part number or string to appear with symbol when plotting."
 }
 
 export class SysColumnDeviceColor extends SysColumnDeviceInput{
@@ -56,16 +57,36 @@ export class SysColumnDeviceColor extends SysColumnDeviceInput{
 	static unit = '';
 	static key = 'color';
 	static input_type = 'color';
-	static save_key = 'c';
+	static save_key = 3;
 	static plottable = false;
 	static uindex = 12;
+
+	/** @inheritdoc @type {SysColumnDeviceInput['from_saveable']} */
+	static from_saveable(pars){
+		let v = super.from_saveable(pars);
+		if (v === null) return v;
+		v = String(v);
+		if (v.startsWith("#")) return v;
+		if (v.length >= 6) return "#" + v;
+		return "#".concat(v[0], v[0], v[1], v[1], v[2], v[2]);
+	}
+	/** @inheritdoc @type {SysColumnDeviceInput['to_saveable']} */
+	static to_saveable(block){
+		let v = super.to_saveable(block);
+		if (v === null) return v;
+		v = String(v);
+		if (v.startsWith("#")) v = v.substring(1);
+		if (v.length < 6) return v;
+		if (v[0] == v[1] && v[2] == v[3] && v[4] == v[5]) return "".concat(v[0], v[2], v[4]);
+		return v;
+	}
 }
 
 export class SysColumnDeviceGain extends SysColumnDeviceInput{
 	static title = 'Nominal Gain';
 	static unit = 'dB';
 	static key = 'gain';
-	static save_key = 'g';
+	static save_key = 1;
 	static uindex = 20;
 }
 
@@ -73,7 +94,7 @@ export class SysColumnDeviceNoiseFigure extends SysColumnDeviceInput{
 	static title = 'Nominal Noise Figure';
 	static unit = 'dB';
 	static key = 'noise_figure';
-	static save_key = 'n';
+	static save_key = 2;
 	static uindex = 21;
 }
 
@@ -82,7 +103,7 @@ export class SysColumnDeviceLinearity extends SysColumnDeviceInput{
 	static unit = '';
 	static key = 'linearity';
 	static input_type = ['Ignore', 'Output Referred', 'Input Referred'];
-	static save_key = 'l';
+	static save_key = 5;
 	static uindex = 22;
 	static plottable = false;
 }
@@ -91,7 +112,7 @@ export class SysColumnDeviceP1dB extends SysColumnDeviceInput{
 	static title = 'Nominal P1dB';
 	static unit = 'dBm';
 	static key = 'p1db';
-	static save_key = '1';
+	static save_key = 6;
 	static uindex = 23;
 }
 
@@ -99,7 +120,7 @@ export class SysColumnDeviceIP3 extends SysColumnDeviceInput{
 	static title = 'Nominal IP3';
 	static unit = 'dBm';
 	static key = 'ip3';
-	static save_key = '3';
+	static save_key = 7;
 	static uindex = 24;
 }
 
@@ -111,7 +132,7 @@ export class SysColumnDeviceIP2 extends SysColumnDeviceInput{
 	static title = 'Nominal IP2';
 	static unit = 'dBm';
 	static key = 'ip2';
-	static save_key = '2';
+	static save_key = 8;
 	static uindex = 25;
 }
 
@@ -123,7 +144,7 @@ export class SysColumnDeviceTemperatureOffset extends SysColumnDeviceInput{
 	static title = 'Temperature Offset';
 	static unit = 'K';
 	static key = 'temperature_offset';
-	static save_key = 'o';
+	static save_key = 9
 	static uindex = 26;
 }
 
@@ -131,7 +152,7 @@ export class SysColumnDeviceLegs extends SysColumnDeviceInput{
 	static title = 'Inputs or Outputs';
 	static unit = '';
 	static key = 'io_count';
-	static save_key = 'j';
+	static save_key = 10;
 	static plottable = false;
 	static uindex = 27;
 
@@ -147,11 +168,11 @@ export class SysColumnDeviceLegs extends SysColumnDeviceInput{
 const sms = []
 for (let i = 0; i < Symbols.length; i++) sms.push(Symbols[i][0]);
 export class SysColumnDeviceSymbol extends SysColumnDeviceInput{
-	static title = 'Symbol';
+	static title = 'Symbol Type';
 	static unit = '';
 	static key = 'symbol';
 	static input_type = sms;
-	static save_key = 's';
+	static save_key = 11;
 	static uindex = 28;
 	static plottable = false;
 }
