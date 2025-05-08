@@ -22,7 +22,7 @@
 	--td-system-output-background-dark: #7c2494;
 	--td-system-auto-background-dark: #7c2494;
 
-	--bg-color-light: #f1fcfa;
+	--bg-color-light: #f1f1f1;
 	--text-color-light: #061813;
 	--input-bg-color-light: #FFFFFF;
 	--input-border-color-light: #cccccc;
@@ -30,7 +30,7 @@
 	--settings-border-color-light: #666666;
 	--settings-bg-color-light: #EEF;
 	--link-color-light: #33F;
-	--theme-bg-color-light: #EEE;
+	--theme-bg-color-light: #ddd;
 	--theme-color-light: #333;
 	--shadow-light: #0003;
 	--grid-color-light: #555;
@@ -192,7 +192,8 @@ select{
 	padding: 4px;
 	transition: 0.3s;
 }
-input[type='color']{
+input[type='color'],
+button{
 	cursor: pointer;
 }
 .container-full{
@@ -271,8 +272,47 @@ input[type='color']{
 	overflow-x: auto;
 	padding: 10px 0;
 }
+.system-plot-container{
+	border: 1px solid var(--settings-border-color);
+	background-color: var(--settings-bg-color);
+	padding: 8px;
+	box-sizing: border-box;
+	margin: 4px 0;
+}
+.system-plot{
+	background-color: var(--bg-color);
+	border: 1px solid var(--settings-border-color);
+	padding: 4px;
+	margin: 4px auto;
+	box-sizing: border-box;
+}
+.canvas-footer{
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+.system-plot-y-axis-controls{
+	display: flex;
+	gap: 4px;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+.system-plot-y-axis-controls input[type="number"]{
+	max-width: 100px;
+}
+.system-plot .canvas-header{
+	margin: 4px;
+}
+.system-plot .canvas-header label{
+	margin: 0 4px;
+	font-size: 0.9em;
+}
+.plot-button-remove{
+	float: right;
+}
 .visibility-controls,
-#sys-globals,
+.system-globals,
 .reset-buttons{
 	border: 1px solid var(--settings-border-color);
 	background-color: var(--settings-bg-color);
@@ -281,24 +321,29 @@ input[type='color']{
 	padding: 4px;
 	font-size: 0.9em;
 }
+.system-globals td{
+	vertical-align: top;
+}
+.system-globals td button{
+	margin: 0 4px;
+}
 .reset-buttons button{
-	margin: 0px;
 	max-width: 100px;
 	min-width: 100px;
 	display: block;
-	margin: 0 4px;
-	cursor: pointer;
 }
 .reset-buttons > div{
 	max-width: 300px;
 	display: flex;
 	margin: 4px;
 }
-.reset-buttons span{
+.reset-buttons span.button-note{
 	display: block;
-	font-size: 0.9em;
-	margin: auto 0;
 	text-align: left;
+}
+span.button-note{
+	font-size: 0.9em;
+	margin: auto 0 auto 4px;
 }
 .sys-config-controls{
 	display: flex;
