@@ -13,9 +13,9 @@ export class ScenePlot1D extends ScenePlotABC{
 	constructor(parent, canvas, cmapKey){
 		let cmap = parent.create_listed_colormap_selector(cmapKey);
 		super(parent, canvas, cmap);
+		this._owidth = canvas.width;
+		this._oheight = canvas.height;
 		this.reset();
-		canvas.width = canvas.width*this.scale;
-		canvas.height = canvas.height*this.scale;
 		const pe = canvas.parentElement.parentElement;
 		this.legend = pe.querySelector(".canvas-legend");
 		if (this.legend !== null){
@@ -39,6 +39,7 @@ export class ScenePlot1D extends ScenePlotABC{
 	}
 	reset(){
 		this.scale = 5;
+		this.magnification = 1;
 		this.padding = 5;
 		this.axesFontSize = 5;
 		this.textPadding = 2;
@@ -63,6 +64,14 @@ export class ScenePlot1D extends ScenePlotABC{
 	set_ygrid(start, stop, count){ this.yGrid = linspace(start, stop, count); }
 	set_xgrid_points(points){ this.xpoints = Number(points); }
 	set_ygrid_points(points){ this.ypoints = Number(points); }
+	config_auto_y(min, max, steps){
+		const [m1, m2, s] = super.config_auto_y(min, max, steps);
+		this.set_ygrid(m1, m2, s);
+	}
+	config_auto_x(min, max, steps){
+		const [m1, m2, s] = super.config_auto_x(min, max, steps);
+		this.set_xgrid(m1, m2, s);
+	}
 	add_data(x, y, item, config){
 		this.redrawWaiting = true;
 		if (config === undefined) config = {};
@@ -76,6 +85,8 @@ export class ScenePlot1D extends ScenePlotABC{
 		return this._data.length - 1;
 	}
 	draw(){
+		this.canvas.width = this._owidth*this.scale/this.magnification;
+		this.canvas.height = this._oheight*this.scale/this.magnification;
 		const ctx = this.canvas.getContext('2d');
 		ctx.reset();
 		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
