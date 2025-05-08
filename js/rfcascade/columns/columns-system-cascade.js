@@ -1,7 +1,7 @@
 /**
  * @import { BlockHint, SysCalculationNode } from "../blocks.js"
  * @typedef {(
- *   SysColumnNoiseFigureCascaded
+ *   SysColumnSystemNoiseFigure
  * | SysColumnSystemIP1dB
  * | SysColumnSystemIIP2
  * | SysColumnSystemIIP3
@@ -13,7 +13,7 @@
  * )} ColumnSystemCascadeHint
  *
  * @typedef {(
- *   typeof SysColumnNoiseFigureCascaded
+ *   typeof SysColumnSystemNoiseFigure
  * | typeof SysColumnSystemIP1dB
  * | typeof SysColumnSystemIIP2
  * | typeof SysColumnSystemIIP3
