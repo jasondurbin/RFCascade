@@ -1,9 +1,8 @@
 export class ColumnSectionABC{
-	static title = "Test";
+	static title = "";
 }
-
 export class ColumnSectionDeviceInput{
-	static title = "Device Input";
+	static title = "Device Control";
 }
 
 export class ColumnSectionDeviceCalculated{
