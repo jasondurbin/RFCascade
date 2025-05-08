@@ -57,6 +57,7 @@ export class SceneURL{
 				this._needsUpdate = false;
 				const v = window.location.href.length > 2000;
 				this._banners.forEach((b) => { b.set_visible(v); })
+				console.log("URL LENGTH", window.location.href.length);
 			}
 			window.setTimeout(_url_checker, 200);
 		}
@@ -95,6 +96,15 @@ export class SceneURL{
 			res = defaultValue;
 		}
 		return res;
+	}
+	/**
+	* Clear all parameters from url.
+	* */
+	clear(){
+		const url = this.url;
+		url.searchParams.keys().forEach((k) => {
+			this.delete(k);
+		})
 	}
 	/**
 	* Remove a parameter from URL state.
