@@ -56,3 +56,58 @@ export class SceneBannerError extends SceneBanner{
 export class SceneBannerWarning extends SceneBanner{
 	constructor(parent, timeout){ super(parent, 'scene-banner-warning', timeout) };
 }
+export class SceneBannerNotice extends SceneBanner{
+	constructor(parent, timeout){ super(parent, 'scene-banner-notice', timeout) };
+}
+
+export class SceneTooltip{
+	/**
+	 * Create a new tooltip.
+	 *
+	 * @param {SceneParent} parent
+	 * */
+	constructor(parent){
+		this.parent = parent;
+		const tt = document.createElement("div");
+		tt.classList = "tooltip-box";
+		document.body.appendChild(tt);
+		const align = (ele) => {
+			const erect = ele.getBoundingClientRect();
+			const trect = tt.getBoundingClientRect();
+
+			let top = window.scrollY + erect.top - trect.height - 5;
+			let left = window.scrollX + erect.left + (erect.width / 2) - (trect.width / 2);
+
+			if (top < window.scrollY) top = window.scrollY + erect.bottom + 5;
+			if (left < window.scrollX) left = window.scrollX + 5;
+			if (left + trect.width > window.scrollX + window.innerWidth){
+				left = window.scrollX + window.innerWidth - trect.width - 5;
+			}
+			tt.style.top = `${top}px`;
+			tt.style.left = `${left}px`;
+		}
+        document.addEventListener('mouseover', (e) => {
+            let ele = e.target.closest('[data-tooltip]');
+			let msg;
+			if (!ele){
+				ele = e.target.closest('[title]');
+				if (ele) {
+					msg = ele.getAttribute('title');
+					ele.setAttribute('data-tooltip', msg);
+					ele.setAttribute('title', '');
+				}
+			}
+			else msg = ele.getAttribute('data-tooltip');
+            if (ele && msg){
+                tt.textContent = msg;
+                tt.style.visibility = 'visible';
+                tt.style.opacity = '1';
+                align(ele);
+            }
+			else{
+                tt.style.visibility = 'hidden';
+                tt.style.opacity = '0';
+            }
+        });
+	}
+}
