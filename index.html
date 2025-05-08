@@ -42,28 +42,74 @@
 		<br>
 	</div>
 	<div class="container-full">
-		<div class="sys-config-controls">
-			<div class="reset-buttons">
-				<h2>Reset</h2>
-				<div><button id="sys-reset-columns">Reset Columns</button><span class='button-note'>Reset column order and visibility.</span></div>
-				<div><button id="sys-reset-globals">Reset Globals</button><span class='button-note'>Reset globals to defaults.</span></div>
-				<div><button id="sys-reset">Reset All</button><span class='button-note'>Reset column order and visiblity, reset globals, reset symbol color, clear line-up, and create one to match current direction.</span></div>
+		<div class="config-controls">
+			<div id="sys-globals" class="system-globals">
+				<button class="system-button-special" id="sys-save" title="Save the entire configuration to clipboard. This allows you to save the configuration safely without relying on the URL.">Save System to Clipboard</button>
+				<button class="system-button-special" id="sys-load" title="Prompts to paste a configuration to load.">Load System</button>
+				<button class="system-button-special" id="sys-clear" title="Remove all blocks and create a simple lineup for current direction.">Clear Lineup</button>
+				<br>
+				<br>
+				<h3>System Globals</h3>
 			</div>
-			<div id="sys-globals" class="system-globals"><h2>System Globals</h2></div>
-			<div id="sys-visibility-controls" class="visibility-controls"><h2>Visible Columns</h2></div>
+			<div id="sys-visibility-controls" class="visibility-controls"><h3>Columns</h3></div>
 		</div>
-		<select id="sys-add-type-selection"></select>
-		<button id="sys-add-type">Add</button>
-		<div id="sys-container"></div>
+		<div class="system-add-block-div">
+			<h3>Append Block</h3>
+			<label for="sys-add-type-selection">Type</label>
+			<select id="sys-add-type-selection"></select>
+			<button id="sys-add-type">Add Block</button>
+		</div>
+		<div id="sys-container" class="system-container"></div>
 	</div>
 	<div class="container-full system-plot-container">
-		<h2>System Plots</h2>
+		<h3>System Plots</h3>
 		<div><button id="sys-add-plot">Add New Plot</button><span class='button-note'>Click to create a system plot.</span></div>
 		<div id="sys-plots"></div>
 	</div>
 	<div class="body-content">
 		<h2>About</h2>
-		<li><a href='https://tablericons.com/'>Icons</a></li>
+		<p>This tool allows create a simple RF system cascade. You may view things such as cascaded noise figure, cascaded linearity (IP3, IP2, P1dB), electronic gain, aperture gain, EIRP, and other parameters.</p>
+		<p>This demo was created by <a href="http://jasonleodurbin.com" target="_blank">Jason Durbin</a>, a <a href="https://www.linkedin.com/in/jasondurbin/" target="_blank">free-lancing phased array engineer</a>.
+		<h2>Usage and Terms</h2>
+		<ul>
+			<li>System blocks may be added using "Add Block". The block <strong>Type</strong> controls how the backend treats it during the cascade. There are multiple types:
+				<ul>
+					<li><strong>Active</strong> - Control gain, noise figure, and linearity settings.</li>
+					<li><strong>Passive</strong> - Control gain and linearity settings. Gain must be less than 0 and the noise figure is directly related to gain.</li>
+					<li><strong>Corporate Combiner</strong> - This block requires the system direction to be "RX". An extra parameter appears ("inputs/outputs"). For example, a 2-way would be have 2 inputs. Gain is the insertion loss of the device <strong>not including the split loss</strong>. During system calculation, this block assumes the signal is coherent and noise is incoherent. Therefore, this block should <strong>improve</strong> SNR. Additionally, this block increases element count (and therefore aperture gain). Note, if your system is not a phased array, this block is unneccessary.</li>
+					<li><strong>Corporate Divider</strong> - This block is reciprocal of "Corporate Combiner" for TX. Similarly, gain must be insertion loss <strong>not including split loss</strong>. Unlike the combiner, noise and signal power are not treated differently through this block. Note, if your system is not a phased array, this block is unneccessary.</li>
+					<li><strong>Combiner</strong> - A combiner that is not treated special. Element count is not affected by it. Loss through the combiner is the number of inputs + gain. Essentially this is an amplifier with linear gain equal to the number of inputs.</li>
+					<li><strong>Divider</strong> - This block is reciprocal of "Combiner". This block is essentially a passive lossy device.</li>
+					<li><strong>Antenna</strong> - A special block that increases aperture gain, signal gain, but not electronic gain or noise figure - essentially an antenna with perfect radiation efficiency. If you have radiation efficiency, consider adding a passive block immediately following the antenna. Antennas should be the first element in RX or last element in RX.</li>
+				</ul>
+			</li>
+			<li>System globals control things like system temperature, direction, bandwidth (for noise), input signal power, and input noise temperature.</li>
+			<li>Columns can be rearranged or hidden as necessary.</li>
+			<li>You can add system plots for most columns.</li>
+			<li>Hover the column header or column selectors to show a description of the parameter.</li>
+		</ul>
+		<h2>Notes</h2>
+		<ul>
+			<li>This tool is not intended to replace more advanced system simulation tools.</li>
+			<li>While I tried my best to test every feature and verify the mathematics, there's a potential of errors. If you see one, contact me.</li>
+			<li>This tool uses a delicate balance of saving raw data to URL (or clipboard). Sometimes, random errors may occur. If you happen to be able to replicate an error, contact me!</li>
+		</ul>
+		<h2>Commercial Use</h2>
+		<p>This tool or any derivatives of this tool may not be hosted on commercial websites (internal or external) without approval. Of course, you are welcome to share the URL.</p>
+		<p>If your company is interested in a bespoke version of this tool on your website, please contact <a href='mailto:hello@neonphysics.com'>hello@neonphysics.com</a></p>
+		<p>Commercial use is otherwise prohibited.</p>
+		<h2>Donation and Feedback</h2>
+		<p>If you enjoy this tool, please consider donating <a href='https://www.paypal.com/donate/?business=D7S3JKRAAKUNQ&no_recurring=0&currency_code=USD' target="_blank">using PayPal</a>.</p>
+		<p>If you have any recommendations, feedback, or requests, feel free to send Jason a message <a href='https://www.linkedin.com/in/jasondurbin/' target='_blank'>on LinkedIn</a> or send an email to <a href='mailto:hello@neonphysics.com'>hello@neonphysics.com</a>.
+		<p><a href='https://www.paypal.com/donate/?business=D7S3JKRAAKUNQ&no_recurring=0&currency_code=USD' target="_blank"><img src='https://img.shields.io/badge/PayPal-Donate-fa448c?logo=paypal' alt='Donate through PayPal'></a></p>
+		<h2>Attributions</h2>
+		<p><ul>
+			<li>Colormaps are from <a href="https://sronpersonalpages.nl/~pault/" target="_blank">Paul Tol's Color Scheme</a> or <a href='https://matplotlib.org/stable/users/explain/colors/colormaps.html' target="_blank">matplotlib</a>.</li>
+			<li>Icons are from <a href='https://tablericons.com/' target="_blank">Tabler Icons</a>.</li>
+		</ul></p>
+		<h2>Tracking and Proprietary Information</h2>
+		<p>I use a self-hosted version of <a href="https://matomo.org/" target="_blank">Matamo</a> to track viewers and analytics. I do <strong>not</strong> sell any information and I only use the information for my personal understanding of usage to better improve the tool.</p>
+		<p>Please note: because the settings are saved in the URL, I can personally view and replicate any configuration. If you or your company deem any configuration to be proprietary, I do not recommend sharing the link. However, I have intentionally not included things like frequency to avoid this concern.</p>
 	</div>
 </body>
 </html>
