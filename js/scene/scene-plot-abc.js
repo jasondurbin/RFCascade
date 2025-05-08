@@ -16,6 +16,77 @@ export class ScenePlotABC extends SceneObjectABC{
 		this.parent = parent;
 		this.canvas = canvas;
 		this.cmap = cmap;
+		this.ycontrols = null;
+		this.xcontrols = null;
+		this.redrawWaiting = true;
+	}
+	_config_ax(min, max, steps, cons){
+		if (cons === null) return [min, max, steps];
+		const ovsc = cons['auto_scale'].checked;
+		const ovst = cons['auto_steps'].checked;
+
+		const pmin = cons['min'].value;
+		const pmax = cons['max'].value;
+		const psteps = cons['steps'].value;
+
+		if (pmin == '' || ovsc) cons['min'].value = min;
+		if (pmax == '' || ovsc) cons['max'].value = max;
+		if (psteps == '' || ovst) cons['steps'].value = steps;
+		cons['min'].disabled = ovsc;
+		cons['max'].disabled = ovsc;
+		cons['steps'].disabled = ovst;
+		return [
+			Number(cons['min'].value),
+			Number(cons['max'].value),
+			Math.max(2, Number(cons['steps'].value)),
+		]
+	}
+	config_auto_y(min, max, steps){
+		return this._config_ax(min, max, steps, this.ycontrols);
+	}
+	config_auto_x(min, max, steps){
+		return this._config_ax(min, max, steps, this.xcontrols);
+	}
+	axis_controls(axis){
+		if (axis == 'x') return this.xcontrols
+		if (axis == 'y') return this.ycontrols;
+		else throw Error(`Unknown axis '${axis}'.`);
+	}
+	save_axis_config(axis){
+		const cons = this.axis_controls(axis);
+		if (cons === null) return null;
+		return [
+			Boolean(cons['auto_scale'].checked),
+			Number(cons['min'].value),
+			Number(cons['max'].value),
+			Number(cons['steps'].value),
+			Boolean(cons['auto_steps'].checked),
+		]
+	}
+	load_axis_config(axis, config){
+		const cons = this.axis_controls(axis);
+		cons['auto_scale'].checked = config[0];
+		cons['min'].value = config[1];
+		cons['max'].value = config[2];
+		cons['steps'].value = config[3];
+		cons['auto_steps'].value = config[5];
+	}
+	install_axis_controls(axis, controls){
+		if (axis == 'x') this.xcontrols = controls;
+		else if (axis == 'y') this.ycontrols = controls;
+		else throw Error(`Unknown axis '${axis}'.`);
+
+		this.add_event_types(axis + "-axis-controls-change", "axis-controls-change");
+
+		['min', 'max', 'auto_scale', 'steps', 'auto_steps'].forEach((k) => {
+			controls[k].addEventListener('change', () => {
+				this.redrawWaiting = true;
+				this.trigger_event(axis + "-axis-controls-change");
+				this.trigger_event("axis-controls-change");
+			})
+		})
+		controls['steps'].setAttribute('min', 2);
+		controls['steps'].setAttribute('max', 101);
 	}
 	install_scale_control(key){
 		const ele = this.find_element(key);
@@ -25,10 +96,10 @@ export class ScenePlotABC extends SceneObjectABC{
 			return v;
 		}
 		ele.addEventListener('change', () => {
-			this.min = _val();
-			this.trigger_event('data-min-changed', this.min);
+			this.y_min = _val();
+			this.trigger_event('data-min-changed', this.y_min);
 		})
-		this.min = _val();
+		this.y_min = _val();
 	}
 	/**
 	* Return the selected colormap.
