@@ -3,9 +3,8 @@ import {SceneParent} from "./scene/scene-abc.js"
 import {SceneBannerError} from "./scene/scene-banners.js"
 import {SceneSystemGlobals, SceneSystemPlot} from "./index-scenes.js"
 import {SysColumns} from "./rfcascade/columns.js"
-import {SysBlockAmplifier, SysBlockPassive, SysCalculationNode, SysBlocks, SysBlockNode, SysBlockCorporateCombiner, SysBlockAntenna, SysBlockCorporateDivider} from "./rfcascade/blocks.js"
+import {SysBlockActive, SysBlockPassive, SysCalculationNode, SysBlocks, SysBlockNode, SysBlockCorporateCombiner, SysBlockAntenna, SysBlockCorporateDivider} from "./rfcascade/blocks.js"
 import {save_system, load_system} from "./rfcascade/system-url.js"
-import {find_colormap} from "./cmap/cmap-listed.js"
 /**
  * @import { BlockHint } from "./rfcascade/blocks.js"
  * @import { SysColumnHint } from "./rfcascade/columns.js"
@@ -30,7 +29,6 @@ export class SceneControlSystemCalc extends SceneParent{
 		this.updateWaiting = true;
 		this.redrawRequested = true;
 		this.globals = SceneSystemGlobals.build(this, this.find_element('globals'));
-		this.cmap = find_colormap('Vibrant_r');
 
 		const urlBanner = new SceneBannerError(this, null);
 		urlBanner.text = "The URL created when saving the data exceeds 2000 characters. This will become a problem when sharing or saving. You could potentially reduce the size by removing part numbers or removing elements."
@@ -53,11 +51,16 @@ export class SceneControlSystemCalc extends SceneParent{
 			this.columns = Array.from(this.calc_columns);
 			this.columns.forEach((c) => { c.load_defaults(); })
 		}
+		const _reset_colors = () => {
+			const cmap = this.globals.cmap();
+			for (let i = 0; i < this.blocks.length; i++) this.blocks[i].color = cmap(i);
+		}
 
 		this.find_element('reset').addEventListener('click', () => {
 			this.blocks = this.create_default_blocks();
 			_reset_columns();
 			this.globals.reset();
+			_reset_colors();
 			this.request_redraw();
 		})
 		this.find_element('reset-columns').addEventListener('click', () => {
@@ -65,9 +68,7 @@ export class SceneControlSystemCalc extends SceneParent{
 			this.request_redraw();
 		})
 		this.find_element('reset-colors').addEventListener('click', () => {
-			for (let i = 0; i < this.blocks.length; i++){
-				this.blocks[i].color = this.cmap(i);
-			}
+			_reset_colors();
 			this.request_redraw();
 		})
 		this.find_element('add-plot').addEventListener('click', () => {
@@ -81,7 +82,7 @@ export class SceneControlSystemCalc extends SceneParent{
 		})
 		this.find_element('add-type').addEventListener('click', () => {
 			const v = sel.value;
-			const c = this.cmap(this.blocks.length);
+			const c = this.globals.cmap()(this.blocks.length);
 			SysBlocks.forEach((e) => {
 				if (e.title == v) this.blocks.push(new e(this, {'color': c}));
 			});
@@ -136,21 +137,23 @@ export class SceneControlSystemCalc extends SceneParent{
 		return this.create_default_tx();
 	}
 	create_default_rx(){
+		const cmap = this.globals.cmap();
 		return [
-			new SysBlockAntenna(this, {'color': this.cmap(0)}),
-			new SysBlockPassive(this, {'gain': -2, 'color': this.cmap(1)}),
-			new SysBlockAmplifier(this, {'color': this.cmap(2)}),
-			new SysBlockCorporateCombiner(this, {'color': this.cmap(3)}),
-			new SysBlockPassive(this, {'color': this.cmap(4)}),
+			new SysBlockAntenna(this, {'color': cmap(0)}),
+			new SysBlockPassive(this, {'gain': -2, 'color': cmap(1)}),
+			new SysBlockActive(this, {'color': cmap(2)}),
+			new SysBlockCorporateCombiner(this, {'color': cmap(3)}),
+			new SysBlockPassive(this, {'color': cmap(4)}),
 		]
 	}
 	create_default_tx(){
+		const cmap = this.globals.cmap();
 		return [
-			new SysBlockPassive(this, {'gain': -2, 'color': this.cmap(0)}),
-			new SysBlockAmplifier(this, {'color': this.cmap(1)}),
-			new SysBlockCorporateDivider(this, {'color': this.cmap(2)}),
-			new SysBlockPassive(this, {'color': this.cmap(3)}),
-			new SysBlockAntenna(this, {'color': this.cmap(4)}),
+			new SysBlockPassive(this, {'gain': -2, 'color': cmap(0)}),
+			new SysBlockActive(this, {'color': cmap(1)}),
+			new SysBlockCorporateDivider(this, {'color': cmap(2)}),
+			new SysBlockPassive(this, {'color': cmap(3)}),
+			new SysBlockAntenna(this, {'color': cmap(4)}),
 		]
 	}
 	request_redraw(){
