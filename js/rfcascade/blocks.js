@@ -81,7 +81,10 @@ export class SysBlockABC{
 				input.setAttribute('min', 1);
 				input.setAttribute('step', 1);
 			}
-		} ;
+		}
+		if (key == 'part_number') input.setAttribute('data-tooltip', "Part number is shown next to symbol on plots.");
+		if (key == 'linearity') input.setAttribute('data-tooltip', "This controls whether linearity is ignored (e.g. infinite) or the input is output or input referred.");
+		if (key == 'color') input.setAttribute('data-tooltip', "Change the symbol color.");
 	}
 	process_inputs(){
 		for (const [key, input] of Object.entries(this.inputs)){
@@ -93,6 +96,22 @@ export class SysBlockABC{
 		this.inputs['p1db'].style.display = lshow;
 		this.inputs['ip2'].style.display = lshow;
 		this.inputs['ip3'].style.display = lshow;
+		if (this.linearity.startsWith("Output")){
+			this.inputs['p1db'].setAttribute('data-tooltip', "This should be output P1dB (OP1dB).");
+			this.inputs['ip2'].setAttribute('data-tooltip', "This should be output IP2 (OIP2).");
+			this.inputs['ip3'].setAttribute('data-tooltip', "This should be output IP3 (OIP3).");
+		}
+		else if (this.linearity.startsWith("Input")){
+			this.inputs['p1db'].setAttribute('data-tooltip', "This should be output input (IP1dB).");
+			this.inputs['ip2'].setAttribute('data-tooltip', "This should be output input (IIP2).");
+			this.inputs['ip3'].setAttribute('data-tooltip', "This should be output input (IIP3).");
+		}
+		else{
+			const msg = "Linearity is ignored for this block.";
+			this.inputs['p1db'].setAttribute('data-tooltip', msg);
+			this.inputs['ip2'].setAttribute('data-tooltip', msg);
+			this.inputs['ip3'].setAttribute('data-tooltip', msg);
+		}
 	}
 	/**
 	 * Calculate and return the coherent noise power contribution of device.
@@ -238,6 +257,7 @@ export class SysBlockNode extends SysBlockABC{
 
 export class SysBlockActive extends SysBlockABC{
 	static title = 'Active';
+	static load_index = 1;
 	static default_pars = {
 		...SysBlockABC.default_pars,
 		'gain': 13,
@@ -254,6 +274,7 @@ export class SysBlockActive extends SysBlockABC{
 
 export class SysBlockPassive extends SysBlockABC{
 	static title = 'Passive';
+	static load_index = 2;
 	static default_pars = {
 		...SysBlockABC.default_pars,
 		'gain': -1,
@@ -273,12 +294,17 @@ export class SysBlockPassive extends SysBlockABC{
 	}
 	map_input(key, input){
 		super.map_input(key, input);
-		if (key == 'noise_figure') input.setAttribute('disabled', true);
+		if (key == 'noise_figure') {
+			input.setAttribute('disabled', true);
+			input.setAttribute('data-tooltip', "Noise figure of a Passive type automatically |gain|.");
+		}
+		if (key == 'gain') input.setAttribute('data-tooltip', "Gain of a Passive type must be <= 0.");
 	}
 }
 
 export class SysBlockCorporateCombiner extends SysBlockPassive{
 	static title = 'Corporate Combiner';
+	static load_index = 3;
 	static default_pars = {
 		...SysBlockABC.default_pars,
 		'gain': -1,
@@ -310,6 +336,11 @@ export class SysBlockCorporateCombiner extends SysBlockPassive{
 			this.parent.throw_warning(`Corporate Combiner at #${this.get_parameter('index')} ('${this.get_parameter('part_number')}') requires system to be in RX. It is now treated as a coherent power combiner.`);
 		}
 	}
+	map_input(key, input){
+		super.map_input(key, input);
+		if (key == 'gain') input.setAttribute('data-tooltip', "This should NOT include loss due to split.");
+		if (key == 'io_count') input.setAttribute('data-tooltip', "Enter the number of legs of the combiner.");
+	}
 	process_inputs(){
 		this.check_direction();
 		super.process_inputs();
@@ -321,6 +352,7 @@ export class SysBlockCorporateCombiner extends SysBlockPassive{
 
 export class SysBlockCorporateDivider extends SysBlockPassive{
 	static title = 'Corporate Divider';
+	static load_index = 4;
 	static default_pars = {
 		...SysBlockABC.default_pars,
 		'gain': -1,
@@ -355,20 +387,28 @@ export class SysBlockCorporateDivider extends SysBlockPassive{
 		this['io_count'] = io;
 		this.inputs['io_count'].value = io;
 	}
+	map_input(key, input){
+		super.map_input(key, input);
+		if (key == 'gain') input.setAttribute('data-tooltip', "This should NOT include loss due to split.");
+		if (key == 'io_count') input.setAttribute('data-tooltip', "Enter the number of legs of the divider.");
+	}
 }
 
 export class SysBlockCombiner extends SysBlockCorporateCombiner{
 	static title = 'Combiner';
+	static load_index = 5;
 	check_direction(){ this.isCorp = false; }
 }
 
 export class SysBlockDivider extends SysBlockCorporateDivider{
 	static title = 'Divider';
+	static load_index = 6;
 	check_direction(){ this.isCorp = false; }
 }
 
 export class SysBlockAntenna extends SysBlockABC{
 	static title = 'Antenna';
+	static load_index = 7;
 	static default_pars = {
 		...SysBlockABC.default_pars,
 		'gain': 4,
