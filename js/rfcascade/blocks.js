@@ -1,9 +1,9 @@
 /**
- * @typedef {SysBlockAmplifier | SysBlockPassive | SysBlockNode | SysBlockCorporateCombiner | SysBlockCorporateDivider} BlockHint
+ * @typedef {SysBlockActive | SysBlockPassive | SysBlockNode | SysBlockCorporateCombiner | SysBlockCorporateDivider} BlockHint
  * @import {SceneControlSystemCalc} from "../index.js"
  * @import {KeyHintAny} from "./columns.js"
  */
-
+import {draw_symbol} from "./symbols.js";
 export const c_T0 = 290;
 
 
@@ -209,8 +209,14 @@ export class SysBlockABC{
 		canvas.height = w;
 		ctx.lineWidth = 1/25;
 		ctx.scale(w, w);
-		this.draw_icon(ctx);
+		draw_symbol(this.get_parameter('symbol'), ctx, this);
 	}
+	/**
+	 * Draw element's icon.
+	 *
+	 * @param {RenderingContext} ctx
+	 * */
+	draw_icon(ctx){ return draw_symbol(this.get_parameter('symbol'), ctx, this); }
 }
 
 export class SysBlockNode extends SysBlockABC{
@@ -230,8 +236,8 @@ export class SysBlockNode extends SysBlockABC{
 	process_inputs(){}
 }
 
-export class SysBlockAmplifier extends SysBlockABC{
-	static title = 'Amplifier';
+export class SysBlockActive extends SysBlockABC{
+	static title = 'Active';
 	static default_pars = {
 		...SysBlockABC.default_pars,
 		'gain': 13,
@@ -242,30 +248,7 @@ export class SysBlockAmplifier extends SysBlockABC{
 		'ip2': 30,
 		'linearity': "Output Referred",
 		'temperature_offset': 0.0,
-	}
-	/**
-	 * Draw element's icon.
-	 *
-	 * @param {RenderingContext} ctx
-	 * */
-	draw_icon(ctx){
-		ctx.strokeStyle = this.get_parameter('color');
-		const mg = 0.2;
-		ctx.beginPath();
-		ctx.moveTo(0.0, 0.5);
-		ctx.lineTo(mg, 0.5);
-		ctx.stroke();
-		ctx.beginPath();
-		ctx.moveTo(mg, mg);
-		ctx.lineTo(1.0-mg, 0.5);
-		ctx.lineTo(mg, 1.0-mg);
-		ctx.lineTo(mg, mg);
-		ctx.stroke();
-
-		ctx.beginPath();
-		ctx.moveTo(1.0-mg, 0.5);
-		ctx.lineTo(1.0, 0.5);
-		ctx.stroke();
+		'symbol': "Amplifier",
 	}
 }
 
@@ -281,6 +264,7 @@ export class SysBlockPassive extends SysBlockABC{
 		'ip3': Infinity,
 		'ip2': Infinity,
 		'temperature_offset': 0.0,
+		'symbol': "Resistor",
 	}
 	process_inputs(){
 		this.inputs['noise_figure'].value = Math.abs(this.inputs['gain'].value);
@@ -290,33 +274,6 @@ export class SysBlockPassive extends SysBlockABC{
 	map_input(key, input){
 		super.map_input(key, input);
 		if (key == 'noise_figure') input.setAttribute('disabled', true);
-	}
-	/**
-	 * Draw element's icon.
-	 *
-	 * @param {RenderingContext} ctx
-	 * */
-	draw_icon(ctx){
-		ctx.strokeStyle = this.get_parameter('color');
-		const mg = 0.2;
-		const h = 0.2
-		ctx.beginPath();
-		ctx.moveTo(0.0, 0.5);
-		ctx.lineTo(mg, 0.5);
-		ctx.stroke();
-
-		ctx.beginPath();
-		ctx.moveTo(mg, 0.5+h/2);
-		ctx.lineTo(mg, 0.5-h/2);
-		ctx.lineTo(1.0-mg, 0.5-h/2);
-		ctx.lineTo(1.0-mg, 0.5+h/2);
-		ctx.lineTo(mg, 0.5+h/2);
-		ctx.stroke();
-
-		ctx.beginPath();
-		ctx.moveTo(1.0-mg, 0.5);
-		ctx.lineTo(1.0, 0.5);
-		ctx.stroke();
 	}
 }
 
@@ -333,71 +290,32 @@ export class SysBlockCorporateCombiner extends SysBlockPassive{
 		'ip2': Infinity,
 		'temperature_offset': 0.0,
 		'io_count': 2,
+		'symbol': "Combiner",
 	}
 	calculate_parameter(key){
 		if (key == 'signal_power_gain') return this.get_parameter('io_count')*10**(Number(this.get_parameter('gain'))/10);
-		if (key == 'electronic_gain' && this._isRX) return 10**(Number(this.get_parameter('gain'))/10);
-		if (key == 'electronic_gain' && !this._isRX) return this.calculate_parameter('signal_power_gain');
-		if ((key == 'element_count' || key == 'negative_noise_figure' || key == 'array_gain') && this._isRX) return this.get_parameter('io_count');
-		if ((key == 'element_count' || key == 'negative_noise_figure' || key == 'array_gain') && !this._isRX) return 1.0;
+		if (key == 'electronic_gain' && this.isCorp) return 10**(Number(this.get_parameter('gain'))/10);
+		if (key == 'electronic_gain' && !this.isCorp) return this.calculate_parameter('signal_power_gain');
+		if ((key == 'element_count' || key == 'negative_noise_figure' || key == 'array_gain') && this.isCorp) return this.get_parameter('io_count');
+		if ((key == 'element_count' || key == 'negative_noise_figure' || key == 'array_gain') && !this.isCorp) return 1.0;
 		if (key == 'single_path_gain') return 1/this.get_parameter('io_count')*10**(Number(this.get_parameter('gain'))/10);
 		if (key == 'noise_temperature_spg'){
 			return (10**(this.get_parameter('noise_figure')/10)*this.get_parameter('io_count') - 1)*this.get_parameter('physical_temperature');
 		}
 		return super.calculate_parameter(key);
 	}
-	process_inputs(){
-		this._isRX = this.parent.globals.is_rx();
-		if (!this._isRX){
+	check_direction(){
+		this.isCorp = this.parent.globals.is_rx();
+		if (!this.isCorp){
 			this.parent.throw_warning(`Corporate Combiner at #${this.get_parameter('index')} ('${this.get_parameter('part_number')}') requires system to be in RX. It is now treated as a coherent power combiner.`);
 		}
+	}
+	process_inputs(){
+		this.check_direction();
 		super.process_inputs();
 		const io = Math.max(1, this.get_parameter('io_count'));
 		this['io_count'] = io;
 		this.inputs['io_count'].value = io;
-	}
-	/**
-	 * Draw element's icon.
-	 *
-	 * @param {RenderingContext} ctx
-	 * */
-	draw_icon(ctx){
-		ctx.strokeStyle = this.get_parameter('color');
-		const mg = 0.2;
-		const h = 0.1
-
-		ctx.beginPath();
-		ctx.moveTo(0.0, mg);
-		ctx.lineTo(mg, mg);
-		ctx.lineTo(1.0-mg, 0.5);
-		ctx.lineTo(mg, 1-mg);
-		ctx.lineTo(0.0, 1-mg);
-		ctx.stroke();
-
-		const count = 7;
-		const step = (1 - 2*mg-2*h)/count;
-		ctx.beginPath();
-		ctx.moveTo(mg, mg);
-		ctx.lineTo(mg, mg+h);
-		for (let i = 1; i < count; i++){
-			ctx.lineTo(mg-step*(-1)**i, mg+h+i*step);
-		}
-		ctx.lineTo(mg, 1-mg-h);
-		ctx.lineTo(mg, 1-mg);
-		ctx.stroke();
-
-		ctx.beginPath();
-		ctx.moveTo(1.0-mg, 0.5);
-		ctx.lineTo(1.0, 0.5);
-		ctx.stroke();
-
-		ctx.beginPath();
-		ctx.font = "0.02em serif";
-		ctx.strokeStyle = "none";
-		ctx.fillStyle = this.get_parameter('color');
-		ctx.textAlign = 'right';
-		ctx.textBaseline = 'bottom';
-  		ctx.fillText(this.get_parameter('io_count') + "x", 1, 1-h)
 	}
 }
 
@@ -414,18 +332,22 @@ export class SysBlockCorporateDivider extends SysBlockPassive{
 		'ip2': Infinity,
 		'temperature_offset': 0.0,
 		'io_count': 2,
+		'symbol': "Divider",
 	}
 	calculate_parameter(key){
 		if (key == 'signal_power_gain' || key == 'electronic_gain' || key == 'single_path_gain') return 1/this.get_parameter('io_count')*10**(Number(this.get_parameter('gain'))/10);
-		if ((key == 'element_count' || key == 'array_gain') && this._isTX) return this.get_parameter('io_count');
-		if (key == 'element_count' && !this._isTX) return 1.0;
+		if ((key == 'element_count' || key == 'array_gain') && this.isCorp) return this.get_parameter('io_count');
+		if (key == 'element_count' && !this.isCorp) return 1.0;
 		return super.calculate_parameter(key);
 	}
-	process_inputs(){
-		this._isTX = this.parent.globals.is_tx();
-		if (!this._isTX){
+	check_direction(){
+		this.isCorp = this.parent.globals.is_tx();
+		if (!this.isCorp){
 			this.parent.throw_warning(`Corporate Divider at #${this.get_parameter('index')} ('${this.get_parameter('part_number')}') requires system to be in TX. It is now treated as a standard power divider.`);
 		}
+	}
+	process_inputs(){
+		this.check_direction();
 		super.process_inputs();
 		this.noise_figure = (Math.abs(this.inputs['gain'].value) + 10*Math.log10(this.get_parameter('io_count')));
 		this.inputs['noise_figure'].value = this.noise_figure.toFixed(2);
@@ -433,49 +355,16 @@ export class SysBlockCorporateDivider extends SysBlockPassive{
 		this['io_count'] = io;
 		this.inputs['io_count'].value = io;
 	}
-	/**
-	 * Draw element's icon.
-	 *
-	 * @param {RenderingContext} ctx
-	 * */
-	draw_icon(ctx){
-		ctx.strokeStyle = this.get_parameter('color');
-		const mg = 0.2;
-		const h = 0.1
+}
 
-		ctx.beginPath();
-		ctx.moveTo(1.0, mg);
-		ctx.lineTo(1.0-mg, mg);
-		ctx.lineTo(mg, 0.5);
-		ctx.lineTo(1.0-mg, 1-mg);
-		ctx.lineTo(1.0, 1-mg);
-		ctx.stroke();
+export class SysBlockCombiner extends SysBlockCorporateCombiner{
+	static title = 'Combiner';
+	check_direction(){ this.isCorp = false; }
+}
 
-		const count = 7;
-		const step = (1 - 2*mg-2*h)/count;
-		ctx.beginPath();
-		ctx.moveTo(1.0-mg, mg);
-		ctx.lineTo(1.0-mg, mg+h);
-		for (let i = 1; i < count; i++){
-			ctx.lineTo(1.0-mg-step*(-1)**i, mg+h+i*step);
-		}
-		ctx.lineTo(1.0-mg, 1-mg-h);
-		ctx.lineTo(1.0-mg, 1-mg);
-		ctx.stroke();
-
-		ctx.beginPath();
-		ctx.moveTo(mg, 0.5);
-		ctx.lineTo(0, 0.5);
-		ctx.stroke();
-
-		ctx.beginPath();
-		ctx.font = "0.02em serif";
-		ctx.strokeStyle = "none";
-		ctx.fillStyle = this.get_parameter('color');
-		ctx.textAlign = 'left';
-		ctx.textBaseline = 'bottom';
-  		ctx.fillText("/" + this.get_parameter('io_count'), 0, 1-h)
-	}
+export class SysBlockDivider extends SysBlockCorporateDivider{
+	static title = 'Divider';
+	check_direction(){ this.isCorp = false; }
 }
 
 export class SysBlockAntenna extends SysBlockABC{
@@ -490,6 +379,7 @@ export class SysBlockAntenna extends SysBlockABC{
 		'ip3': Infinity,
 		'ip2': Infinity,
 		'temperature_offset': 0.0,
+		'symbol': "Antenna",
 	}
 	calculate_parameter(key){
 		if (key == 'electronic_gain') return 1.0;
@@ -505,54 +395,14 @@ export class SysBlockAntenna extends SysBlockABC{
 		super.map_input(key, input);
 		if (key == 'noise_figure') input.setAttribute('disabled', true);
 	}
-	/**
-	 * Draw element's icon.
-	 *
-	 * @param {RenderingContext} ctx
-	 * */
-	draw_icon(ctx){
-		ctx.strokeStyle = this.get_parameter('color');
-		const mg = 0.2;
-		const w = 0.3
-		const h = 0.2
-
-		if (this.parent.globals.is_tx()){
-			ctx.beginPath();
-			ctx.moveTo(0.0, 0.5);
-			ctx.lineTo(mg, 0.5);
-			ctx.lineTo(mg, 1 - h);
-			ctx.lineTo(1 - w, 1 - h);
-			ctx.stroke();
-
-			ctx.beginPath();
-			ctx.moveTo(1 - w, 1 - h);
-			ctx.lineTo(1 - 2*w, mg);
-			ctx.lineTo(1, mg);
-			ctx.lineTo(1 - w, 1 - h);
-			ctx.stroke();
-		}
-		else{
-			ctx.beginPath();
-			ctx.moveTo(1, 0.5);
-			ctx.lineTo(1 - mg, 0.5);
-			ctx.lineTo(1 - mg, 1 - h);
-			ctx.lineTo(w, 1 - h);
-			ctx.stroke();
-
-			ctx.beginPath();
-			ctx.moveTo(w, 1 - h);
-			ctx.lineTo(2*w, mg);
-			ctx.lineTo(0, mg);
-			ctx.lineTo(w, 1 - h);
-			ctx.stroke();
-		}
-	}
 }
 
 export const SysBlocks = [
-	SysBlockAmplifier,
+	SysBlockActive,
 	SysBlockPassive,
 	SysBlockCorporateCombiner,
 	SysBlockCorporateDivider,
+	SysBlockCombiner,
+	SysBlockDivider,
 	SysBlockAntenna,
 ]
