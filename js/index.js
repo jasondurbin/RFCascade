@@ -1,10 +1,12 @@
 import {SceneTheme, FindSceneURL} from "./scene/scene-util.js";
 import {SceneParent} from "./scene/scene-abc.js"
 import {SceneBannerError} from "./scene/scene-banners.js"
-import {SceneSystemGlobals, SceneSystemPlot} from "./index-scenes.js"
+import {SceneSystemGlobals} from "./rfcascade/scene-globals.js"
+import {ScenePlotManager} from "./rfcascade/scene-plot-manager.js"
+import {SceneColumnSelectors} from "./rfcascade/scene-column-selectors.js"
 import {SysColumns} from "./rfcascade/columns.js"
 import {SysBlockActive, SysBlockPassive, SysCalculationNode, SysBlocks, SysBlockNode, SysBlockCorporateCombiner, SysBlockAntenna, SysBlockCorporateDivider} from "./rfcascade/blocks.js"
-import {save_system, load_system} from "./rfcascade/system-url.js"
+import {save_system_url, save_system_config, load_system_url, load_system_config, log_loading_error} from "./rfcascade/system-url.js"
 /**
  * @import { BlockHint } from "./rfcascade/blocks.js"
  * @import { SysColumnHint } from "./rfcascade/columns.js"
@@ -25,13 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
  * */
 export class SceneControlSystemCalc extends SceneParent{
 	constructor(prepend){
-		super(prepend, ['container', 'reset', 'add-type', 'add-type-selection', 'visibility-controls', 'globals']);
+		super(prepend, ['container', 'add-type', 'add-type-selection', 'visibility-controls', 'globals', 'save', 'load', 'clear']);
 		this.updateWaiting = true;
 		this.redrawRequested = true;
 		this.globals = SceneSystemGlobals.build(this, this.find_element('globals'));
 
 		const urlBanner = new SceneBannerError(this, null);
-		urlBanner.text = "The URL created when saving the data exceeds 2000 characters. This will become a problem when sharing or saving. You could potentially reduce the size by removing part numbers or removing elements."
+		urlBanner.text = (
+			"The URL created when saving the data exceeds 2000 characters. "
+			+ "This will become a problem in some browsers when sharing or saving.<br>"
+			+ "You could potentially reduce the size by removing part numbers, resetting globals, removing elements, or removing plots."
+		);
 		urlBanner.hide();
 		const url = FindSceneURL();
 		url.add_url_warning(urlBanner);
@@ -40,40 +46,12 @@ export class SceneControlSystemCalc extends SceneParent{
 		const cont = this.find_element('container');
 		const div = document.createElement('div');
 
-		div.classList = "system-container";
 		cont.appendChild(div);
 
 		this.table = document.createElement('table');
 		this.table.classList = 'system-table';
 		div.appendChild(this.table);
-
-		const _reset_columns = () => {
-			this.columns = Array.from(this.calc_columns);
-			this.columns.forEach((c) => { c.load_defaults(); })
-		}
-		const _reset_colors = () => {
-			const cmap = this.globals.cmap();
-			for (let i = 0; i < this.blocks.length; i++) this.blocks[i].color = cmap(i);
-		}
-
-		this.find_element('reset').addEventListener('click', () => {
-			this.blocks = this.create_default_blocks();
-			_reset_columns();
-			this.globals.reset();
-			_reset_colors();
-			this.request_redraw();
-		})
-		this.find_element('reset-columns').addEventListener('click', () => {
-			_reset_columns();
-			this.request_redraw();
-		})
-		this.find_element('reset-colors').addEventListener('click', () => {
-			_reset_colors();
-			this.request_redraw();
-		})
-		this.find_element('add-plot').addEventListener('click', () => {
-			this.add_plot();
-		})
+		this.plotManager = new ScenePlotManager(this);
 		const sel = this.find_element('add-type-selection');
 		SysBlocks.forEach((e) => {
 			const opt = document.createElement('option');
@@ -92,45 +70,52 @@ export class SceneControlSystemCalc extends SceneParent{
 		/** @type {Array<SysColumnHint>} */
 		this.calc_columns = Array.from(SysColumns, (c) => new c(this));
 		this.columns = Array.from(this.calc_columns);
+		const csel = new SceneColumnSelectors(this, this.find_element('visibility-controls'), this.calc_columns);
+		csel.addEventListener('reset-column-order', () => {this.reset_column_order();})
 
-		const vDiv = this.find_element('visibility-controls');
-		const cDivs = {};
-		this.calc_columns.forEach((c) => {
-			if (!c.hideable) return;
-			const s = c.section;
-			let cDiv = cDivs[s.title];
-			if (cDiv === undefined){
-				cDiv = document.createElement('div');
-				const pDiv = document.createElement('div');
-				const h = document.createElement('h4');
-				h.innerHTML = s.title;
-				cDiv.classList = "visibility-selectors"
-				cDivs[s.title] = cDiv;
-				vDiv.appendChild(pDiv);
-				pDiv.appendChild(h);
-				pDiv.appendChild(cDiv);
+		this.find_element('clear').addEventListener('click', () => {
+			this.blocks = this.create_default_blocks();
+			this.request_redraw();
+		});
+
+		this.find_element('save').addEventListener('click', () => {
+			try{
+				const config = save_system_config(this);
+				navigator.clipboard.writeText(JSON.stringify(config));
+				this.throw_notice("System configuration saved to clipboard.");
 			}
-			c.addEventListener('visibility-changed', () => { this.request_redraw(); });
-			c.create_visibility_selector(cDiv);
+			catch(e){
+				this.throw_error("Failed to copy to clipboard.");
+			}
+		})
+		this.find_element('load').addEventListener('click', () => {
+			const str = prompt("Please paste config below.");
+			if (str === null) return;
+			try{
+				const config = JSON.parse(str);
+				if (load_system_config(this, config)) this.throw_notice("System sucessfully loaded");
+				else this.throw_error("There was an issue when loading system. Try again.");
+			}
+			catch(e){
+				this.log_loading_error(e);
+				this.throw_error("There was an issue when parsing input. Try again.");
+			}
 		})
 
-		this.pcounter = 1;
-		/** @type {Array<SceneSystemPlot>} */
-		this.plots = []
-
 		this.output = new SysBlockNode(this);
-		load_system(this);
+		load_system_url(this);
 		this.request_redraw();
 		this.start_draw_loop();
 	}
-	add_plot(defaults){
-		const con = this.find_element("plots");
-		const div = document.createElement('div');
-		div.classList = "system-plot";
-		con.appendChild(div);
-		const p = new SceneSystemPlot(this, div, this.pcounter, defaults);
-		this.plots.push(p);
-		this.pcounter++;
+	request_redraw(){ this.redrawRequested = true; }
+	reset_colors(){
+		const cmap = this.globals.cmap();
+		for (let i = 0; i < this.blocks.length; i++) this.blocks[i].color = cmap(i);
+		this.request_redraw();
+	}
+	reset_column_order(){
+		this.columns = Array.from(this.calc_columns);
+		this.request_redraw();
 	}
 	create_default_blocks(){
 		if (this.globals.is_rx()) return this.create_default_rx();
@@ -155,9 +140,6 @@ export class SceneControlSystemCalc extends SceneParent{
 			new SysBlockPassive(this, {'color': cmap(3)}),
 			new SysBlockAntenna(this, {'color': cmap(4)}),
 		]
-	}
-	request_redraw(){
-		this.redrawRequested = true;
 	}
 	/**
 	 * Move block in lineup
@@ -447,37 +429,10 @@ export class SceneControlSystemCalc extends SceneParent{
 					replot = true;
 				}
 			});
-			if (this.process_plots(replot)) save_system(this);
+			if (this.plotManager.process(replot)) save_system_url(this);
 			requestAnimationFrame(_draw);
 		}
 		_draw();
-	}
-	redraw_plots(){
-		const plts = Array.from(this.plots);
-
-		this.find_element("plots").innerHTML = '';
-		this.plots = [];
-		plts.forEach((p) => {
-			if (p.needsDelete) return;
-			this.add_plot(p.save_parameters);
-		})
-	}
-	process_plots(force){
-		let redraw = false;
-		let save = force;
-		this.plots.forEach((p) => {
-			if (p.needsDelete){
-				redraw = true;
-				save = true;
-			}
-		});
-		if (redraw) this.redraw_plots();
-		this.plots.forEach((p) => {
-			if (p.needsSave || force) save = true;
-			if (!p.needsUpdate && !force) return
-			p.draw();
-		})
-		return save;
 	}
 	/**
 	 * Format input Number to a string.
@@ -493,4 +448,70 @@ export class SceneControlSystemCalc extends SceneParent{
 		if (av > 1e-2 && av < 1e3 || av == 0.0 || !allowEng) return `${value.toFixed(2)}`;
 		return engineering_formatter.format(value);
 	}
+	save_columns(){
+		const vCols = [];
+		for (let i = 0; i < this.columns.length; i++){
+			const c = this.columns[i];
+			const e = [c.constructor.uindex, c.visible ? 1 : 0];
+			if (c.selected_unit !== null && c.selected_unit != c.unit_default && c.unit_default !== null){
+				e.push(c.selected_unit);
+			}
+			vCols.push(e);
+		}
+		return vCols;
+	}
+	/**
+	 * Load columns from input.
+	 *
+	 * @param {Array<Array<Any>>} config
+	 * */
+	load_columns(config){
+		const ncols = [];
+		const scols = {};
+		const ocols = {}; // fixed columns.
+		this.calc_columns.forEach((c) => {
+			if (c.position_fixed) {
+				ncols.push(c);
+				ocols[c.constructor.uindex] = c;
+			}
+			else scols[c.constructor.uindex] = c;
+		});
+
+		try{
+			for (let i = 0; i < config.length; i++){
+				let k, v, entry;
+				try{
+					entry = config[i];
+					k = entry[0];
+					v = Boolean(entry[1]);
+				}
+				catch(e){
+					log_loading_error(e);
+					continue;
+				}
+				/** @type {SysColumnHint} */
+				let c;
+				if (scols.hasOwnProperty(k)){
+					c = scols[k];
+					ncols.push(c);
+					delete scols[k];
+				}
+				else if (ocols.hasOwnProperty(k)){
+					c = ocols[k];
+					delete ocols[k];
+				}
+				c.visible = Boolean(v);
+				if (entry.length >= 3) c.selected_unit = entry[2];
+			}
+		}
+		catch(e){
+			log_loading_error(e);
+			return;
+		}
+		console.log(`${ncols.length} columns(s) loaded...`)
+		if (this.calc_columns.length != ncols.length) console.log(`${this.calc_columns.length - ncols.length} columns(s) added...`)
+		this.calc_columns.forEach((c) => { if (!ncols.includes(c)) ncols.push(c); })
+		this.columns = ncols;
+	}
+	log_loading_error(...a){ log_loading_error(...a); }
 }
