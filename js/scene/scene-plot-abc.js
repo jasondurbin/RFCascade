@@ -56,20 +56,20 @@ export class ScenePlotABC extends SceneObjectABC{
 		const cons = this.axis_controls(axis);
 		if (cons === null) return null;
 		return [
-			Boolean(cons['auto_scale'].checked),
+			Boolean(cons['auto_scale'].checked) ? 1 : 0,
 			Number(cons['min'].value),
 			Number(cons['max'].value),
 			Number(cons['steps'].value),
-			Boolean(cons['auto_steps'].checked),
+			Boolean(cons['auto_steps'].checked) ? 1 : 0,
 		]
 	}
 	load_axis_config(axis, config){
 		const cons = this.axis_controls(axis);
-		cons['auto_scale'].checked = config[0];
+		cons['auto_scale'].checked = Boolean(config[0]);
 		cons['min'].value = config[1];
 		cons['max'].value = config[2];
 		cons['steps'].value = config[3];
-		cons['auto_steps'].value = config[5];
+		cons['auto_steps'].value = Boolean(config[5]);
 	}
 	install_axis_controls(axis, controls){
 		if (axis == 'x') this.xcontrols = controls;
