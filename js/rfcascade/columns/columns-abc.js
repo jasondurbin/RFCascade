@@ -42,7 +42,11 @@ export class SysColumnABC extends SceneObjectEvent{
 	 * */
 	get section(){ return this.constructor.section; }
 	get plottable(){ return this.constructor.plottable; }
-	get selector_title(){ return this.constructor.title; }
+	get selector_title(){
+		const t = this.constructor.selector_title;
+		if (t !== undefined) return t;
+		return this.constructor.title;
+	}
 	get position_fixed(){ return this.constructor.position_fixed; }
 	get hideable(){ return this.constructor.hideable; }
 	get is_cascaded(){ return this.constructor.cascade; }
@@ -82,6 +86,12 @@ export class SysColumnABC extends SceneObjectEvent{
 		}
 		return this.unit.selected_unit;
 	}
+	get unit_default(){
+		if (this.unit === null) return null;
+		const du = this.constructor.unit_default;
+		if (du !== undefined) return du;
+		return this.unit.defaultUnit;
+	}
 	get selected_unit(){
 		if (this.unit === null) return null
 		this.__selectedUnit = this.unit.selected_unit;
@@ -94,11 +104,8 @@ export class SysColumnABC extends SceneObjectEvent{
 	get label(){ return `${this.title} (${this.unit_label})`;}
 	get parameter_key(){ return this.constructor.key; }
 	get column_type(){ return this.constructor.type; }
-	load_defaults(){
-		for (const [k, v] of Object.entries(this.constructor.defaults)){
-			this[k] = v;
-		}
-	}
+	get description(){ return this.constructor.description; }
+	reset_visibility(){ this.visible = this.constructor.defaults['visible']; }
 	/**
 	 * Convert block to saveable parameter.
 	 *
@@ -120,30 +127,29 @@ export class SysColumnABC extends SceneObjectEvent{
 			v = vi;
 		}
 		else throw Error(`Unknown type ${itype}.`);
-		return [this.save_key, v];
+		return v;
 	}
 	/**
 	 * Attempt to find my saveable parameter from input.
 	 *
-	 * @param {Object} pars
-	 * @returns {[String, Any]}
+	 * @param {Array} pars
+	 * @returns {Any}
 	 * */
 	static from_saveable(pars){
 		const itype = this.input_type;
 		if (this.save_key === null) throw Error("Cannot load.");
 		if (itype === null) throw Error("Missing type.");
 		let v = pars[this.save_key];
-		if (v === undefined || v === null) return [null, null, null];
-
+		if (v === undefined || v === null) return null;
 		if (itype == 'number') v = Number(v);
 		else if (itype == 'text' || itype == 'color'){}
 		else if (Array.isArray(itype)){
 			v = Number(v);
-			if (v < 0 || v >= itype.length) return [null, null, null];
+			if (v < 0 || v >= itype.length) return null;
 			v = itype[v];
 		}
 		else throw Error(`Unknown type ${itype}.`)
-		return [this.key, v];
+		return v;
 	}
 	/**
 	 * Create unit for column.
@@ -153,6 +159,7 @@ export class SysColumnABC extends SceneObjectEvent{
 	bind_header(header){
 		this.header = header;
 		this.update_header();
+		if (this.description !== undefined) header.setAttribute('data-tooltip', this.description);
 	}
 	update_header(){
 		if (this.header === undefined) return;
@@ -180,6 +187,10 @@ export class SysColumnABC extends SceneObjectEvent{
 		this.addEventListener('visibility-changed', (v) => { chk.checked = v; });
 		chk.addEventListener('click', () => { this.visible = chk.checked; })
 		this.visibilitySelectors.push([div, lbl]);
+
+		if (this.description !== undefined){
+			div.setAttribute('data-tooltip', this.description);
+		}
 	}
 	/**
 	 * Create unit for column.
