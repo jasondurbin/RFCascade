@@ -1,6 +1,6 @@
 /**
  * @import {BlockHint} from "./blocks.js"
- * @import {SysColumnTypeHint} from "./columns.js"
+ * @import {SysColumnTypeHint, SysColumnHint} from "./columns.js"
  * @import {SceneControlSystemCalc} from "../index.js"
  */
 import {SysColumns} from "./columns.js"
@@ -9,15 +9,32 @@ import {FindSceneURL} from "../scene/scene-util.js";
 
 /** @type {Array<SysColumnTypeHint>} */
 const _saveable = [];
+const _block_loader = {};
+let maxKey;
 
-const _checks = {'t': true};
-SysColumns.forEach((e) => {
-	if (e.save_key === null) return;
-	if (_checks[e.save_key] !== undefined) throw Error(`Key ${e.save_key} is not unique.`);
-	_checks[e.save_key] = true;
-	_saveable.push(e);
-});
-
+function _check_loadability(){
+	const _checks = {0: null};
+	for (let i = 0; i < SysColumns.length; i++){
+		const e = SysColumns[i];
+		if (e.save_key === null) continue;
+		const s = Number(e.save_key);
+		if (s != e.save_key) throw Error(`Key ${e.save_key} is not a number (${e.title}).`)
+		if (_checks[s] !== undefined) throw Error(`Key ${e.save_key} is not unique (${e.title}).`);
+		_checks[s] = e;
+	}
+	maxKey = Math.max(...Object.keys(_checks)) + 1;
+	for (let i = 0; i < maxKey; i++){
+		if (_checks.hasOwnProperty(i)) _saveable.push(_checks[i]);
+		else throw Error(`No saveable parameter at index ${i}.`)
+	}
+	SysBlocks.forEach((c) => {
+		const s = Number(c.load_index);
+		if (s != c.load_index) throw Error(`Key ${c.load_index} is not a number (${c.title}).`)
+		if (_block_loader[s] !== undefined) throw Error(`Key ${c.load_index} is not unique (${c.title}).`);
+		_block_loader[s] = c;
+	});
+}
+_check_loadability();
 /**
  * Create a URL saveable parameter set from block.
  *
@@ -26,18 +43,20 @@ SysColumns.forEach((e) => {
 export function save_blocks(blocks){
 	const pars = [];
 	blocks.forEach((b) => {
-		const res = {};
-		_saveable.forEach((c) => {
-			const [k, v] = c.to_saveable(b);
-			res[k] = v;
-		})
+		const res = [];
+
 		const _t = () => {
 			for (let i = 0; i < SysBlocks.length; i++){
-				if (SysBlocks[i].title == b.constructor.title) return i;
+				if (SysBlocks[i].title == b.constructor.title) return b.constructor.load_index;
 			}
-			return 0;
+			return SysBlocks[0].load_index;
 		}
-		res['t'] = _t();
+		for (let i = 0; i < _saveable.length; i++){
+			let v;
+			if (i == 0) v = _t();
+			else v = _saveable[i].to_saveable(b);
+			res.push(v);
+		}
 		pars.push(res);
 	});
 	return pars;
@@ -48,25 +67,24 @@ export function save_blocks(blocks){
  *
  * @param {SceneControlSystemCalc} sys
  * */
-export function save_system(sys){
+export function save_system_url(sys){
 	const url = FindSceneURL();
-	const config = {}
-	config['b'] = save_blocks(sys.blocks);
-
-	const vCols = [];
-	sys.columns.forEach((c) => {
-		vCols.push([c.constructor.uindex, c.visible, c.selected_unit])
-	})
-
-	const plots = [];
-	sys.plots.forEach((p) => {
-		plots.push(p.save_parameters)
-	})
-
-	config['c'] = vCols;
-	config['p'] = plots;
-	config['g'] = sys.globals.save_parameters();
-	url.set_param('s', btoa(JSON.stringify(config)));
+	const config = save_system_config(sys);
+	url.clear();
+	for (const [k, v] of Object.entries(config)) url.set_param(k, JSON.stringify(v));
+}
+/**
+ * Save system.
+ *
+ * @param {SceneControlSystemCalc} sys
+ * */
+export function save_system_config(sys){
+	return {
+		'b': save_blocks(sys.blocks),
+		'c': sys.save_columns(),
+		'g': sys.globals.save_parameters(),
+		'p': sys.plotManager.save_parameters(),
+	}
 }
 
 export function load_blocks(parent, configs){
@@ -75,34 +93,82 @@ export function load_blocks(parent, configs){
 		const blocks = [];
 		for (let i = 0; i < configs.length; i++){
 			const entry = configs[i];
-			const t = entry['t'];
-
 			const pars = {};
-			_saveable.forEach((c) => {
-				const [k, v] = c.from_saveable(entry);
-				if (k !== null) pars[k] = v;
-			});
-			for (let i = 0; i < SysBlocks.length; i++){
-				if (i == t) {
-					blocks.push(new SysBlocks[i](parent, pars));
-				}
+			for (let i = 1; i < _saveable.length; i++){
+				const c = _saveable[i];
+				const v = c.from_saveable(entry);
+				if (v !== null) pars[c.key] = v;
 			}
+			const kls = _block_loader[entry[0]];
+			if (kls === undefined) throw Error(`Block with load index ${entry[0]} not found.`)
+			blocks.push(new kls(parent, pars));
 		}
 		return blocks;
 	}
 	catch(e){
-		console.log(e);
+		log_loading_error(e);
 		return null;
 	}
 }
 
+export function load_system_config(sys, config){
+	let blocks = null;
+	let success = true;
+	const bc = config['b'];
+	const _log = (e) => {
+		success = false;
+		log_loading_error(e);
+	}
+	if (bc !== null && bc !== undefined){
+		try{
+			blocks = load_blocks(sys, bc);
+			console.log(`${blocks.length} block(s) loaded...`)
+		}
+		catch(e){ _log(e); }
+	}
+	const cc = config['c'];
+	if (cc !== null && cc !== undefined){
+		try{ sys.load_columns(cc); }
+		catch(e){ _log(e); }
+	}
+	const gc = config['g'];
+	if (gc !== null && gc !== undefined){
+		try{ sys.globals.load(gc); }
+		catch(e){ _log(e); }
+	}
+	const pc = config['p'];
+	if (pc !== null && pc !== undefined){
+		try{ sys.plotManager.load(pc); }
+		catch(e){ _log(e); }
+	}
+	if (blocks !== null && blocks.length != 0) sys.blocks = blocks;
+	else sys.blocks = sys.create_default_blocks();
+	return success;
+}
 /**
  * Load system from URL.
  *
  * @param {SceneControlSystemCalc} sys
  * */
-export function load_system(sys){
-	load_system_uri(sys, FindSceneURL().get_param('s'));
+export function load_system_url(sys){
+	const config = {};
+	const url = FindSceneURL();
+	['b', 'c' , 'g', 'p'].forEach(k => {
+		const c = url.get_param(k);
+		if (c === null || c === undefined) return;
+		try{
+			config[k] = JSON.parse(c);
+		}
+		catch(e){ log_loading_error(e); }
+	})
+	return load_system_config(sys, config);
+}
+
+export function log_loading_error(e){
+	console.log("Uncaught error has occured. If you see this message, report the error below to developer.");
+	console.log("----- Start Error");
+	console.log(e);
+	console.log("----- End Error");
 }
 
 /**
@@ -113,38 +179,38 @@ export function load_system(sys){
  * */
 export function load_system_uri(sys, uri){
 	const _parse = (k) => {
-		try{ return JSON.parse(atob(k)); }
+		try{ return JSON.parse(k); }
 		catch(e){
-			console.log(e);
+			log_loading_error(e);
 			return null
 		}
 	}
 	const _blocks = (config) => {
-		try{ return load_blocks(sys, config['b']); }
+		try{ return load_blocks(sys, config[0]); }
 		catch(e){
-			console.log(e);
+			log_loading_error(e);
 			return null;
 		}
 	}
 	const _plots = (config) => {
-		try{ return Array.from(config['p']); }
+		try{ return Array.from(config[3]); }
 		catch(e){
-			console.log(e);
+			log_loading_error(e);
 			return null;
 		}
 	}
 	const _globs = (config) => {
-		try{ return config['g']; }
+		try{ return config[2]; }
 		catch(e){
-			console.log(e);
+			log_loading_error(e);
 			return null;
 		}
 	}
 	const _cols = (config) => {
 		let cdef;
-		try{ cdef = config['c']; }
+		try{ cdef = config[1]; }
 		catch(e){
-			console.log(e);
+			log_loading_error(e);
 			return null
 		}
 		try{
@@ -158,7 +224,17 @@ export function load_system_uri(sys, uri){
 				}
 				else scols[c.constructor.uindex] = c;
 			});
-			for (const [k, v, u] of cdef){
+			for (const entry of cdef){
+				let k, v;
+				try{
+					k = entry[0];
+					v = Boolean(entry[1]);
+				}
+				catch(e){
+					log_loading_error(e);
+					continue;
+				}
+				/** @type {SysColumnHint} */
 				let c;
 				if (scols.hasOwnProperty(k)){
 					c = scols[k];
@@ -169,8 +245,8 @@ export function load_system_uri(sys, uri){
 					c = ocols[k];
 					delete ocols[k];
 				}
-				c.visible = v;
-				c.selected_unit = u;
+				c.visible = Boolean(v);
+				if (entry.length >= 3) c.selected_unit = entry[2];
 			}
 			sys.calc_columns.forEach((c) => {
 				if (!ncols.includes(c)) ncols.push(c);
@@ -178,7 +254,7 @@ export function load_system_uri(sys, uri){
 			return ncols;
 		}
 		catch(e){
-			console.log(e);
+			log_loading_error(e);
 			return null;
 		}
 	}
@@ -193,9 +269,7 @@ export function load_system_uri(sys, uri){
 			if (vcols !== null) sys.columns = vcols;
 			let pplots = _plots(config);
 			if (pplots !== null){
-				pplots.forEach((p) => {
-					sys.add_plot(p)
-				})
+				sys.plotManager.load(pplots);
 			}
 		}
 	}
