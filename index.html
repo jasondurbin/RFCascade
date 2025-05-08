@@ -6,8 +6,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1">
 <!--	<link rel="shortcut icon" href="./assets/favicon.png" />-->
 	<link rel="stylesheet" href="./css/main.css">
-	<meta name="description" content="RF system cascade calculator by Jason Durbin." />
-	<meta name="keywords" content="RF system, RF, RF cascade" />
+	<meta name="description" content="RF/Phased array system cascade calculator by Jason Durbin." />
+	<meta name="keywords" content="RF system, RF, RF cascade, phased array" />
 
 	<meta property="og:url" content="https://jasondurbin.github.io/RFCascade/" />
 	<meta property="og:type" content="website" />
@@ -36,7 +36,7 @@
 </head>
 <body class="auto">
 	<div class="text-group" style="text-align:center;">
-		<h1>Simple RF System Cascade Simulator</h1>
+		<h1>Simple RF/Phased Array System Cascade</h1>
 		<p>By: <a href="http://jasonleodurbin.com" target="_blank">Jason Durbin</a> (<a href="https://www.linkedin.com/in/jasondurbin/" target="_blank">LinkedIn</a>).</p>
 		<div>Dark Mode: <button class="theme-toggle">auto</button></div>
 		<br>
@@ -45,21 +45,21 @@
 		<div class="sys-config-controls">
 			<div class="reset-buttons">
 				<h2>Reset</h2>
-				<div><button id="sys-reset-columns">Reset Columns</button><span>Reset column order and visibility.</span></div>
-				<div><button id="sys-reset-colors">Reset Colors</button><span>Reset block colors.</span></div>
-				<div><button id="sys-reset-globals">Reset Globals</button><span>Reset globals to defaults.</span></div>
-				<div><button id="sys-reset">Reset All</button><span>Reset all above, clear line-up, and create one to match current direction.</span></div>
+				<div><button id="sys-reset-columns">Reset Columns</button><span class='button-note'>Reset column order and visibility.</span></div>
+				<div><button id="sys-reset-globals">Reset Globals</button><span class='button-note'>Reset globals to defaults.</span></div>
+				<div><button id="sys-reset">Reset All</button><span class='button-note'>Reset column order and visiblity, reset globals, reset symbol color, clear line-up, and create one to match current direction.</span></div>
 			</div>
-			<div id="sys-globals"><h2>System Globals</h2></div>
+			<div id="sys-globals" class="system-globals"><h2>System Globals</h2></div>
 			<div id="sys-visibility-controls" class="visibility-controls"><h2>Visible Columns</h2></div>
 		</div>
 		<select id="sys-add-type-selection"></select>
 		<button id="sys-add-type">Add</button>
 		<div id="sys-container"></div>
-		<button id="sys-add-plot">Add Plot</button>
 	</div>
-	<div class="container-full" id="sys-plots">
-		<div class="sys-plot"></div>
+	<div class="container-full system-plot-container">
+		<h2>System Plots</h2>
+		<div><button id="sys-add-plot">Add New Plot</button><span class='button-note'>Click to create a system plot.</span></div>
+		<div id="sys-plots"></div>
 	</div>
 	<div class="body-content">
 		<h2>About</h2>
