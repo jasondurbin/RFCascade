@@ -2,7 +2,7 @@ import {MeshColormapControl} from "../cmap/cmap-mesh.js";
 import {ListedColormapControl} from "../cmap/cmap-listed.js";
 import {SceneQueue} from "./scene-queue.js";
 import {ScenePopup, FindSceneURL} from "./scene-util.js";
-import {SceneBannerWarning, SceneBannerError} from "./scene-banners.js"
+import {SceneBannerWarning, SceneBannerError, SceneBannerNotice, SceneTooltip} from "./scene-banners.js"
 import {SceneObjectEvent} from "./scene-event-obj.js"
 /** @import {SceneBanner} from "./scene-banners.js" */
 
@@ -183,6 +183,7 @@ export class SceneParent extends SceneObjectABC{
 		super(...args);
 		/** @type {Array<SceneBanner>} */
 		this.banners = [];
+		this.tooltip = new SceneTooltip(this);
 	}
 	/**
 	* A control with name `key` has changed.
@@ -266,13 +267,22 @@ export class SceneParent extends SceneObjectABC{
 		this._create_banner(SceneBannerError, msg, timeout);
 	}
 	/**
-	* Create a Warnung banner.
+	* Create a Warning banner.
 	*
 	* @param {String} msg
 	* @param {Number | null} timeout in ms. If null, banner will always stay open.
 	* */
 	throw_warning(msg, timeout){
 		this._create_banner(SceneBannerWarning, msg, timeout);
+	}
+	/**
+	* Create a Notice banner.
+	*
+	* @param {String} msg
+	* @param {Number | null} timeout in ms. If null, banner will always stay open.
+	* */
+	throw_notice(msg, timeout){
+		this._create_banner(SceneBannerNotice, msg, timeout);
 	}
 	display_banners(){
 		let c = 0;
