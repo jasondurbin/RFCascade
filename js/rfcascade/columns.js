@@ -56,8 +56,8 @@ const uids = {};
 ].forEach(columns => {
 	columns.forEach((c) => {
 		SysColumns.push(c);
-
 		let ui = c.uindex;
+		if (ui === null || ui === undefined) throw Error(`Column '${c.name}' is missing 'uindex'.`)
 		if (uids[ui]) throw Error(`uindex=${ui} is not unique for ${c.name}. Taken by ${uids[ui]}`)
 		uids[ui] = c.name;
 	})
