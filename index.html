@@ -70,7 +70,7 @@
 		<h2>About</h2>
 		<p>This tool allows create a simple RF system cascade. You may view things such as cascaded noise figure, cascaded linearity (IP3, IP2, P1dB), electronic gain, aperture gain, EIRP, and other parameters.</p>
 		<p>This demo was created by <a href="http://jasonleodurbin.com" target="_blank">Jason Durbin</a>, a <a href="https://www.linkedin.com/in/jasondurbin/" target="_blank">free-lancing phased array engineer</a>.
-		<h2>Usage and Terms</h2>
+		<h2>Usage and Terminology</h2>
 		<ul>
 			<li>System blocks may be added using "Add Block". The block <strong>Type</strong> controls how the backend treats it during the cascade. There are multiple types:
 				<ul>
@@ -83,10 +83,20 @@
 					<li><strong>Antenna</strong> - A special block that increases aperture gain, signal gain, but not electronic gain or noise figure - essentially an antenna with perfect radiation efficiency. If you have radiation efficiency, consider adding a passive block immediately following the antenna. Antennas should be the first element in RX or last element in RX.</li>
 				</ul>
 			</li>
+			<li><strong>Single Path vs Coherent</strong><p>In this tool, I carry terms for <strong>single path</strong> noise figure and gain and <strong>coherent</strong> noise figure and gain. This distinction only applies when looking at and RX system. <strong>Coherent</strong> implies that all devices prior to corporate combiner are all operating identically and their noise is random; therefore, the signals add coherent (in power) and the noise adds incoherently (in voltage). <strong>Single path</strong> is the performance if all elements are off <i>except</i> for one. For example, single path gain is what you'd measure with a network analyzer connected to one input.</p></li>
+			<li><strong>Electronic gain vs array gain vs signal gain</strong>
+				<ul>
+					<li><strong>Signal gain</strong> is simply the how much the signal power has increased through the system. All devices impact the signal gain.</li>
+					<li><strong>Array gain</strong> is simplified directivity estimate of the array. Some people carry this number as negative noise figure (because that's what it is).</li>
+					<li><strong>Electronic gain</strong> is the gain of all the devices that contribute to noise. If you remember from Pozar, the noise at the output of a device = <code>g_linear*(kTB + noise_input)</code>. For a phased array, the gain in that equation (<code>g_linear</code>) is electronic gain.</li>
+					<li>More simply, if you were to replace the entire phased array with a single amplifier and a single antenna, the amplifier would have a gain equal to <strong>electronic gain</strong> (and a noise figure equal to <strong>coherent noise figure</strong>), the antenna would have a directivity equal to <strong>array gain</strong>, and the signal from left to right (or vise-versa) would increase by the <strong>signal gain</strong>.</li>
+				</ul>
+			</li>
 			<li>System globals control things like system temperature, direction, bandwidth (for noise), input signal power, and input noise temperature.</li>
 			<li>Columns can be rearranged or hidden as necessary.</li>
 			<li>You can add system plots for most columns.</li>
 			<li>Hover the column header or column selectors to show a description of the parameter.</li>
+			<li>The Y-axis of plots is controlled by the unit selected in the column. Changing the unit of a column will change the unit of the plot.</li>
 		</ul>
 		<h2>Notes</h2>
 		<ul>
