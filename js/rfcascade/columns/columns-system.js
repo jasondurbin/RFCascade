@@ -5,7 +5,6 @@ import {SysColumnSystemNoiseFigure, SysColumnSystemIP1dB, SysColumnSystemIIP3, S
 
 export const ColumnSystemSorted = [
 	SysColumnSignalGain,
-	SysColumnSystemElementCount,
 	SysColumnSystemElectronicGain,
 	SysColumnSystemSinglePathGain,
 	SysColumnSystemArrayGain,
@@ -15,6 +14,7 @@ export const ColumnSystemSorted = [
 	SysColumnSystemEIRP,
 	SysColumnSignalPowerInIdeal,
 	SysColumnSignalPowerOutIdeal,
+	SysColumnSystemElementCount,
 	SysColumnNoisePowerIn,
 	SysColumnNoisePowerOut,
 	SysColumnSNRIn,
