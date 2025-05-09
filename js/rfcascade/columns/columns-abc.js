@@ -101,7 +101,10 @@ export class SysColumnABC extends SceneObjectEvent{
 		this.__selectedUnit = u;
 		if (this.unit !== null && this.unit !== undefined) this.unit.selected_unit = u;
 	}
-	get label(){ return `${this.title} (${this.unit_label})`;}
+	get label(){
+		if (this.unit_label == '') return this.title
+		return `${this.title} (${this.unit_label})`;
+	}
 	get parameter_key(){ return this.constructor.key; }
 	get column_type(){ return this.constructor.type; }
 	get description(){ return this.constructor.description; }
