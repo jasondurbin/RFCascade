@@ -506,8 +506,9 @@ h3{
 	transition: opacity 0.3s;
 	pointer-events: none;
 	font-size: 0.8em;
-	max-width: 200px;
+	max-width: 300px;
 	white-space: normal;
+	line-height: 1.5em;
 }
 @media (max-width: 900px){
 	.config-controls{
