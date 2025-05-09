@@ -38,6 +38,10 @@ import {ColumnUnitPower, ColumnUnitGain, ColumnUnitNoiseDensity} from "../column
 import {ColumnSectionSystemCascaded} from "./column-sections.js"
 
 export class SysColumnSystemOutput extends SysColumnABC{
+	static defaults = {
+		...SysColumnABC.defaults,
+		'visible': false,
+	}
 	static type = 'system-output';
 	static section = ColumnSectionSystemCascaded;
 
@@ -61,6 +65,7 @@ export class SysColumnSignalPowerOutIdeal extends SysColumnSystemOutput{
 	static key = 'signal_power_out';
 	static uindex = 101;
 	static cascade = true;
+	static description = "Signal power at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
 	calculate_element(node, block){
@@ -79,6 +84,7 @@ export class SysColumnNoisePowerOut extends SysColumnSystemOutput{
 	static unit_default = 'dBm/Hz';
 	static key = 'noise_power_out';
 	static uindex = 102;
+	static description = "Noise power at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
 	calculate_element(node, block){
@@ -96,12 +102,17 @@ export class SysColumnNoisePowerOut extends SysColumnSystemOutput{
 }
 
 export class SysColumnSystemOP1dB extends SysColumnSystemOutput{
+	static defaults = {
+		...SysColumnSystemOutput.defaults,
+		'visible': true
+	}
 	static title = 'Cascaded OP1dB';
 	static unit = ColumnUnitPower;
 	static unit_default = 'dBm';
 	static key = 'system_op1db';
 	static uindex = 104;
 	static cascade = true;
+	static description = "Cascaded output-referred 1-dB compression point (OP1dB) at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
 	calculate_element(node, block){
@@ -123,12 +134,17 @@ export class SysColumnSystemOP1dB extends SysColumnSystemOutput{
 }
 
 export class SysColumnSystemOIP3 extends SysColumnSystemOutput{
+	static defaults = {
+		...SysColumnSystemOutput.defaults,
+		'visible': true
+	}
 	static title = 'Cascaded OIP3';
 	static unit = ColumnUnitPower;
 	static unit_default = 'dBm';
 	static key = 'system_oip3';
 	static uindex = 105;
 	static cascade = true;
+	static description = "Cascaded output-referred third order intercept point (OIP3) at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
 	calculate_element(node, block){
@@ -156,6 +172,7 @@ export class SysColumnSystemOIP2 extends SysColumnSystemOutput{
 	static key = 'system_oip2';
 	static uindex = 106;
 	static cascade = true;
+	static description = "Cascaded output-referred second order intercept point (OIP2) at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
 	calculate_element(node, block){
@@ -178,11 +195,12 @@ export class SysColumnSystemOIP2 extends SysColumnSystemOutput{
 
 export class SysColumnSystemElementCount extends SysColumnSystemOutput{
 	static title = 'Device Quantity';
-	static unit = '';
+	static unit = null;
 	static key = 'system_element_count';
 	static number_type = 'int';
 	static uindex = 107;
 	static cascade = true;
+	static description = "Number of identical devices that would appear in system. This is also related to array gain.";
 
 	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
 	calculate_element(node, block){
@@ -202,6 +220,7 @@ export class SysColumnSystemSinglePathGain extends SysColumnSystemOutput{
 	static key = 'system_single_path_gain';
 	static uindex = 108;
 	static cascade = true;
+	static description = "Cascaded single path gain (when only one element is on) at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
 	calculate_element(node, block){
@@ -219,6 +238,7 @@ export class SysColumnSystemArrayGain extends SysColumnSystemOutput{
 	static key = 'system_array_gain';
 	static uindex = 109;
 	static cascade = true;
+	static description = "Cascaded array gain at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemOutput['calculate_element']} */
 	calculate_element(node, block){

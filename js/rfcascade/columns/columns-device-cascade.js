@@ -39,6 +39,7 @@ export class SysDeviceNoiseFigureContribution extends SysDeviceCascaded{
 	static unit = ColumnUnitGain;
 	static key = 'noise_figure_contribution';
 	static uindex = 401;
+	static description = "Device's noise figure/factor contribution to system."
 
 	/** @inheritdoc @type {SysDeviceCascaded['calculate_element']} */
 	calculate_element(node, block){
@@ -68,6 +69,7 @@ export class SysDeviceBackoffP1dB extends SysDeviceCascaded{
 	static unit = ColumnUnitPowerGain;
 	static key = 'backoff_from_p1db';
 	static uindex = 402;
+	static description = "How far from OP1dB the device is operating. If this number is negative, the device is in compression."
 
 	/** @inheritdoc @type {SysDeviceCascaded['calculate_element']} */
 	calculate_element(node, block){
@@ -81,10 +83,15 @@ export class SysDeviceBackoffP1dB extends SysDeviceCascaded{
 }
 
 export class SysDeviceSPGNoiseFigureContribution extends SysDeviceCascaded{
+	static defaults = {
+		...SysColumnABC.defaults,
+		'visible': false,
+	}
 	static title = "Single Path Noise Figure Contribution";
 	static unit = ColumnUnitGain;
 	static key = 'noise_figure_contribution_spg';
 	static uindex = 403;
+	static description = "Device's noise figure contribution when operating in single path mode (only applicable with RX mode)."
 
 	/** @inheritdoc @type {SysDeviceCascaded['calculate_element']} */
 	calculate_element(node, block){

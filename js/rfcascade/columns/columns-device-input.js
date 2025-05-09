@@ -49,7 +49,7 @@ export class SysColumnDevicePartNumber extends SysColumnDeviceInput{
 	static save_key = 4;
 	static plottable = false;
 	static uindex = 11;
-	static description = "Device part number or string to appear with symbol when plotting."
+	static description = "Device part number or string to appear with symbol when plotting.";
 }
 
 export class SysColumnDeviceColor extends SysColumnDeviceInput{
@@ -60,6 +60,7 @@ export class SysColumnDeviceColor extends SysColumnDeviceInput{
 	static save_key = 3;
 	static plottable = false;
 	static uindex = 12;
+	static description = "Color of device's symbol.";
 
 	/** @inheritdoc @type {SysColumnDeviceInput['from_saveable']} */
 	static from_saveable(pars){
@@ -88,6 +89,7 @@ export class SysColumnDeviceGain extends SysColumnDeviceInput{
 	static key = 'gain';
 	static save_key = 1;
 	static uindex = 20;
+	static description = "Nominal gain of device.";
 }
 
 export class SysColumnDeviceNoiseFigure extends SysColumnDeviceInput{
@@ -96,6 +98,7 @@ export class SysColumnDeviceNoiseFigure extends SysColumnDeviceInput{
 	static key = 'noise_figure';
 	static save_key = 2;
 	static uindex = 21;
+	static description = "Nominal noise figure of device.";
 }
 
 export class SysColumnDeviceLinearity extends SysColumnDeviceInput{
@@ -106,6 +109,7 @@ export class SysColumnDeviceLinearity extends SysColumnDeviceInput{
 	static save_key = 5;
 	static uindex = 22;
 	static plottable = false;
+	static description = "Linearity settings of device such as input/output referred or ignored.";
 }
 
 export class SysColumnDeviceP1dB extends SysColumnDeviceInput{
@@ -114,6 +118,7 @@ export class SysColumnDeviceP1dB extends SysColumnDeviceInput{
 	static key = 'p1db';
 	static save_key = 6;
 	static uindex = 23;
+	static description = "Nominal input- or output-referred 1-dB compression point (OP1dB or IP1dB depending on 'linearity' setting).";
 }
 
 export class SysColumnDeviceIP3 extends SysColumnDeviceInput{
@@ -122,6 +127,7 @@ export class SysColumnDeviceIP3 extends SysColumnDeviceInput{
 	static key = 'ip3';
 	static save_key = 7;
 	static uindex = 24;
+	static description = "Nominal input- or output-referred third order intercept point (OIP3 or IIP3 depending on 'linearity' setting).";
 }
 
 export class SysColumnDeviceIP2 extends SysColumnDeviceInput{
@@ -134,6 +140,7 @@ export class SysColumnDeviceIP2 extends SysColumnDeviceInput{
 	static key = 'ip2';
 	static save_key = 8;
 	static uindex = 25;
+	static description = "Nominal input- or output-referred second order intercept point (OIP2 or IIP2 depending on 'linearity' setting).";
 }
 
 export class SysColumnDeviceTemperatureOffset extends SysColumnDeviceInput{
@@ -146,6 +153,7 @@ export class SysColumnDeviceTemperatureOffset extends SysColumnDeviceInput{
 	static key = 'temperature_offset';
 	static save_key = 9
 	static uindex = 26;
+	static description = "Device's temperature increase from system temperature.";
 }
 
 export class SysColumnDeviceLegs extends SysColumnDeviceInput{
@@ -155,6 +163,7 @@ export class SysColumnDeviceLegs extends SysColumnDeviceInput{
 	static save_key = 10;
 	static plottable = false;
 	static uindex = 27;
+	static description = "Number of inputs or outputs of a combiner or divider.";
 
 	/** @inheritdoc @type {SysColumnDeviceInput['force_hidden']} */
 	force_hidden(blocks){
@@ -175,6 +184,7 @@ export class SysColumnDeviceSymbol extends SysColumnDeviceInput{
 	static save_key = 11;
 	static uindex = 28;
 	static plottable = false;
+	static description = "Device's schematic symbol type.";
 }
 
 export const ColumnDeviceInput = [

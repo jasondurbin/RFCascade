@@ -71,6 +71,8 @@ export class SysColumnDeviceSignalPowerGain extends SysColumnDeviceCalculated{
 	static unit = ColumnUnitPowerGain;
 	static key = 'signal_power_gain';
 	static uindex = 41;
+	static description = "Device's contribution to signal gain. Signal gain takes into account nominal gain and combination gain (for combiners).";
+
 	get title(){
 		if (this.unit === undefined) return "Device Signal Gain";
 		if (this.unit.selected_unit == 'V/V') return "Device Signal Voltage Gain";
@@ -84,6 +86,7 @@ export class SysColumnDeviceNoiseTemperature extends SysColumnDeviceCalculated{
 	static unit = ColumnUnitTemperature;
 	static key = 'noise_temperature';
 	static uindex = 42;
+	static description = "Device's noise temperature. This is calculated from nominal noise figure and temperature.";
 }
 
 export class SysColumnDeviceNoiseFigureActual extends SysColumnDeviceCalculated{
@@ -91,6 +94,7 @@ export class SysColumnDeviceNoiseFigureActual extends SysColumnDeviceCalculated{
 	static unit = ColumnUnitGain;
 	static key = 'noise_figure_physical';
 	static uindex = 43;
+	static description = "Device's noise figure/factor. This is calculated from nominal noise figure and temperature.";
 
 	get title(){
 		if (this.unit === undefined) return "Device Noise Figure";
@@ -104,6 +108,7 @@ export class SysColumnDeviceTemperature extends SysColumnDeviceCalculated{
 	static unit = ColumnUnitTemperature;
 	static key = 'physical_temperature';
 	static uindex = 44;
+	static description = "Device's physical temperature. This is system temperature increased by device's temperature offset.";
 }
 
 export class SysColumnDeviceOP1dB extends SysColumnDeviceCalculated{
@@ -112,6 +117,7 @@ export class SysColumnDeviceOP1dB extends SysColumnDeviceCalculated{
 	static unit_default = 'dBm';
 	static key = 'op1db';
 	static uindex = 45;
+	static description = "Device's output-referred 1-dB compression point (OP1dB).";
 }
 
 export class SysColumnDeviceIP1dB extends SysColumnDeviceCalculated{
@@ -120,6 +126,7 @@ export class SysColumnDeviceIP1dB extends SysColumnDeviceCalculated{
 	static unit_default = 'dBm';
 	static key = 'ip1db';
 	static uindex = 46;
+	static description = "Device's input-referred 1-dB compression point (IP1dB).";
 }
 
 export class SysColumnDeviceOIP3 extends SysColumnDeviceCalculated{
@@ -128,6 +135,7 @@ export class SysColumnDeviceOIP3 extends SysColumnDeviceCalculated{
 	static unit_default = 'dBm';
 	static key = 'oip3';
 	static uindex = 47;
+	static description = "Device's output-referred third order intercept point (OIP3).";
 }
 
 export class SysColumnDeviceIIP3 extends SysColumnDeviceCalculated{
@@ -136,6 +144,7 @@ export class SysColumnDeviceIIP3 extends SysColumnDeviceCalculated{
 	static unit_default = 'dBm';
 	static key = 'iip3';
 	static uindex = 48;
+	static description = "Device's input-referred third order intercept point (IIP3).";
 }
 
 export class SysColumnDeviceOIP2 extends SysColumnDeviceCalculated{
@@ -144,6 +153,7 @@ export class SysColumnDeviceOIP2 extends SysColumnDeviceCalculated{
 	static unit_default = 'dBm';
 	static key = 'oip2';
 	static uindex = 49;
+	static description = "Device's output-referred second order intercept point (OIP2).";
 }
 
 export class SysColumnDeviceIIP2 extends SysColumnDeviceCalculated{
@@ -152,6 +162,7 @@ export class SysColumnDeviceIIP2 extends SysColumnDeviceCalculated{
 	static unit_default = 'dBm';
 	static key = 'iip2';
 	static uindex = 50;
+	static description = "Device's input-referred second order intercept point (IIP2).";
 }
 
 export class SysColumnDeviceApertureGain extends SysColumnDeviceCalculated{
@@ -159,6 +170,7 @@ export class SysColumnDeviceApertureGain extends SysColumnDeviceCalculated{
 	static unit = ColumnUnitGain;
 	static key = 'array_gain';
 	static uindex = 51;
+	static description = "Device's contribution to aperture gain.";
 }
 
 export class SysColumnSinglePathGain extends SysColumnDeviceCalculated{
@@ -166,6 +178,8 @@ export class SysColumnSinglePathGain extends SysColumnDeviceCalculated{
 	static unit = ColumnUnitGain;
 	static key = 'single_path_gain';
 	static uindex = 52;
+	static description = "Device's contribution single path gain (RX mode only).";
+
 	/** @inheritdoc @type {SysColumnSystemCascade['force_hidden']} */
 	force_hidden(blocks){ return this.parent.globals.is_tx(); }
 }
@@ -175,6 +189,8 @@ export class SysColumnDeviceElectronicGain extends SysColumnDeviceCalculated{
 	static unit = ColumnUnitPowerGain;
 	static key = 'electronic_gain';
 	static uindex = 53;
+	static description = "Device's contribution to electronic gain.";
+
 	get title(){
 		if (this.unit === undefined) return "Device Electronic Gain";
 		if (this.unit.selected_unit == 'V/V') return "Device Electronic Voltage Gain";

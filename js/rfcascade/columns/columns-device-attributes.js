@@ -34,6 +34,7 @@ export class SysColumnDeviceType extends SysColumnDeviceAttr{
 	static key = 'title';
 	static uindex = 1;
 	static hideable = true;
+	static description = "Device's type. This cannot be changed after the block is created.";
 }
 
 export class SysColumnDeviceItem extends SysColumnDeviceAttr{
@@ -50,6 +51,7 @@ export class SysColumnDeviceMove extends SysColumnDeviceAttr{
 	static key = null;
 	static uindex = 3;
 }
+
 export class SysColumnDeviceDelete extends SysColumnDeviceAttr{
 	static type = 'remove';
 	static title = '';
@@ -66,6 +68,7 @@ export class SysColumnDeviceIcon extends SysColumnDeviceAttr{
 	static uindex = 5;
 	static hideable = true;
 	static selector_title = "Symbol";
+	static description = "Device's schematic symbol.";
 }
 
 export const ColumnDeviceAttribute = [

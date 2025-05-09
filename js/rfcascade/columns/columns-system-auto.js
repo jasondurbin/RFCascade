@@ -27,7 +27,7 @@ export class SysColumnSystemOutputAuto extends SysColumnABC{
 	static defaults = {
 		...SysColumnABC.defaults,
 		'required': false,
-		'visible': true
+		'visible': false
 	}
 	static section = ColumnSectionSystemCascaded;
 	/**
@@ -48,14 +48,20 @@ export class SysColumnSignalPowerInIdeal extends SysColumnSystemOutputAuto{
 	static unit_default = "dBm";
 	static key = 'signal_power_in';
 	static uindex = 201;
+	static description = "Signal power at the input of a block.";
 }
 
 export class SysColumnSignalGain extends SysColumnSystemOutputAuto{
+	static defaults = {
+		...SysColumnSystemOutputAuto.defaults,
+		'visible': true
+	}
 	static title = 'Signal Gain';
 	static unit = ColumnUnitGain;
 	static key = 'system_signal_gain_ideal';
 	static uindex = 202;
 	static cascade = true;
+	static description = "Cascaded signal gain at the output of a block or system.";
 }
 
 export class SysColumnNoisePowerIn extends SysColumnSystemOutputAuto{
@@ -64,6 +70,7 @@ export class SysColumnNoisePowerIn extends SysColumnSystemOutputAuto{
 	static unit_default = "dBm/Hz";
 	static key = 'noise_power_in';
 	static uindex = 203;
+	static description = "Noise power at the input of a block.";
 }
 
 export class SysColumnSNROut extends SysColumnSystemOutputAuto{
@@ -72,6 +79,7 @@ export class SysColumnSNROut extends SysColumnSystemOutputAuto{
 	static key = 'snr_out';
 	static uindex = 204;
 	static cascade = true;
+	static description = "Signal-to-noise ratio at the output of a block or system.";
 }
 
 export class SysColumnSNRIn extends SysColumnSystemOutputAuto{
@@ -79,4 +87,5 @@ export class SysColumnSNRIn extends SysColumnSystemOutputAuto{
 	static unit = ColumnUnitGain;
 	static key = 'snr_in';
 	static uindex = 205;
+	static description = "Signal-to-noise ratio at the input of a block.";
 }

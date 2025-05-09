@@ -42,6 +42,10 @@ import {ColumnUnitGain, ColumnUnitPower, ColumnUnitTemperature, ColumnUnitGoverT
 import {ColumnSectionSystemCascaded} from "./column-sections.js"
 
 export class SysColumnSystemCascade extends SysColumnABC{
+	static defaults = {
+		...SysColumnABC.defaults,
+		'visible': false,
+	}
 	static type = 'system-cascade';
 	static section = ColumnSectionSystemCascaded;
 
@@ -59,11 +63,16 @@ export class SysColumnSystemCascade extends SysColumnABC{
 }
 
 export class SysColumnSystemNoiseFigure extends SysColumnSystemCascade{
+	static defaults = {
+		...SysColumnSystemCascade.defaults,
+		'visible': true
+	}
 	static title = "Cascaded Coherent Noise Figure";
 	static unit = ColumnUnitGain;
 	static key = 'system_noise_factor';
 	static uindex = 301;
 	static cascade = true;
+	static description = "Cascaded noise figure/factor at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemCascade['calculate_element']} */
 	calculate_element(node, block){
@@ -91,6 +100,7 @@ export class SysColumnSystemIP1dB extends SysColumnSystemCascade{
 	static key = 'system_ip1db';
 	static uindex = 302;
 	static cascade = true;
+	static description = "Cascaded input-referred 1-dB compression point (IP1dB) at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemCascade['calculate_element']} */
 	calculate_element(node, block){
@@ -108,6 +118,7 @@ export class SysColumnSystemIIP3 extends SysColumnSystemCascade{
 	static key = 'system_iip3';
 	static uindex = 303;
 	static cascade = true;
+	static description = "Cascaded input-referred third order intercept point (IIP3) at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemCascade['calculate_element']} */
 	calculate_element(node, block){
@@ -125,6 +136,7 @@ export class SysColumnSystemIIP2 extends SysColumnSystemCascade{
 	static key = 'system_iip2';
 	static uindex = 304;
 	static cascade = true;
+	static description = "Cascaded input-referred second order intercept point (IIP2) at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemCascade['calculate_element']} */
 	calculate_element(node, block){
@@ -142,6 +154,7 @@ export class SysColumnSystemEIRP extends SysColumnSystemCascade{
 	static key = 'system_eirp';
 	static uindex = 305;
 	static cascade = true;
+	static description = "Cascaded effective isotropic radiated power at the output of a block or system. Only available in TX mode.";
 
 	/** @inheritdoc @type {SysColumnSystemCascade['calculate_element']} */
 	calculate_element(node, block){
@@ -160,6 +173,7 @@ export class SysColumnSystemElectronicGain extends SysColumnSystemCascade{
 	static key = 'system_electronic_gain';
 	static uindex = 306;
 	static cascade = true;
+	static description = "Cascaded electronic gain at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemCascade['calculate_element']} */
 	calculate_element(node, block){
@@ -176,6 +190,7 @@ export class SysColumnSystemNoiseTemperature extends SysColumnSystemCascade{
 	static key = 'system_noise_temperature';
 	static uindex = 307;
 	static cascade = true;
+	static description = "Cascaded noise temperature at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemCascade['calculate_element']} */
 	calculate_element(node, block){
@@ -192,6 +207,7 @@ export class SysColumnSystemGoverT extends SysColumnSystemCascade{
 	static key = 'system_g_over_t';
 	static uindex = 308;
 	static cascade = true;
+	static description = "Cascaded G/T ('g over t' or 'gain over temperature') at the output of a block or system.";
 
 	/** @inheritdoc @type {SysColumnSystemCascade['calculate_element']} */
 	calculate_element(node, block){
@@ -207,6 +223,7 @@ export class SysColumnSystemSPGNoiseFigure extends SysColumnSystemCascade{
 	static key = 'system_noise_factor_spg';
 	static uindex = 309;
 	static cascade = true;
+	static description = "Cascaded single path gain at the output of a block or system. Only available in RX mode.";
 
 	/** @inheritdoc @type {SysColumnSystemCascade['calculate_element']} */
 	calculate_element(node, block){
