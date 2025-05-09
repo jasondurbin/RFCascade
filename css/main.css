@@ -298,6 +298,7 @@ input[type='color']{
 	padding: 8px;
 	box-sizing: border-box;
 	margin: 4px 0;
+	max-width: 960px;
 }
 .system-plot{
 	background-color: var(--bg-color);
