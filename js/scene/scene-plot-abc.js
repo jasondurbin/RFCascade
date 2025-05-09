@@ -20,6 +20,15 @@ export class ScenePlotABC extends SceneObjectABC{
 		this.xcontrols = null;
 		this.redrawWaiting = true;
 	}
+	delete(){
+		this.canvas.remove();
+		if (this.ycontrols !== null) for (const v of Object.values(this.ycontrols)) v.remove();
+		if (this.xcontrols !== null) for (const v of Object.values(this.xcontrols)) v.remove()
+		const cm = this.cmap;
+		super.delete();
+		this.redrawWaiting = false;
+		cm.delete();
+	}
 	_config_ax(min, max, steps, cons){
 		if (cons === null) return [min, max, steps];
 		const ovsc = cons['auto_scale'].checked;
@@ -77,9 +86,8 @@ export class ScenePlotABC extends SceneObjectABC{
 		else throw Error(`Unknown axis '${axis}'.`);
 
 		this.add_event_types(axis + "-axis-controls-change", "axis-controls-change");
-
 		['min', 'max', 'auto_scale', 'steps', 'auto_steps'].forEach((k) => {
-			controls[k].addEventListener('change', () => {
+			this.register_dom_event(controls[k], 'change', () => {
 				this.redrawWaiting = true;
 				this.trigger_event(axis + "-axis-controls-change");
 				this.trigger_event("axis-controls-change");
@@ -106,7 +114,7 @@ export class ScenePlotABC extends SceneObjectABC{
 	*
 	* @returns {String}
 	* */
-	selected_cmap = () => { return this.cmap.selector.value; }
+	selected_cmap(){ return this.cmap.selector.value; }
 	create_hover_items(){
 		const canvas = this.canvas;
 		const p = canvas.parentElement.parentElement;

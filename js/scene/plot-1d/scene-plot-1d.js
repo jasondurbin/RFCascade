@@ -24,18 +24,15 @@ export class ScenePlot1D extends ScenePlotABC{
 				this.redrawWaiting = true;
 			});
 		}
-		const _draw_frame = () => {
-			const rd = this.redrawWaiting || cmap.changed;
-			if (rd && this.xGrid !== undefined){
-				this.draw();
-				console.log("Updating 1D plot...");
-			}
-			requestAnimationFrame(_draw_frame)
-		}
-		_draw_frame();
+		parent.add_animation_watcher(this);
 	}
-	legend_items(){
-		return this.legend.querySelectorAll(".legend-item");
+	legend_items(){ return this.legend.querySelectorAll(".legend-item"); }
+	draw_frame(){
+		if (this.isDeleted) return;
+		if ((this.redrawWaiting || this.cmap.changed) && this.xGrid !== undefined){
+			this.draw();
+			console.log("Updating 1D plot...");
+		}
 	}
 	reset(){
 		this.scale = 5;

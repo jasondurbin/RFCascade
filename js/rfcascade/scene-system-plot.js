@@ -7,14 +7,17 @@ import {linspace} from "../util.js";
 
 const ICO_SIZE = 50;
 export class SceneSystemPlot extends ScenePlot1D{
+	static autoUpdateURL = false;
+	/** @type {ScenePlotManager} */
+	parent;
 	/**
 	 * Create global scene for System simulator.
 	 *
 	 * @param {ScenePlotManager} parent
 	 * @param {HTMLDivElement} element
 	 * @param {Number} counter
+	 * @param {Object} loadPars
 	 * */
-	static autoUpdateURL = false;
 	constructor(parent, element, counter, loadPars){
 		const pre = "plot-" + String(counter);
 		const chc = document.createElement('select');
@@ -25,27 +28,14 @@ export class SceneSystemPlot extends ScenePlot1D{
 		const but1 = document.createElement('button');
 		const prefix = parent.prepend + "-" + pre;
 		const axis = {};
-
-		parent.parent.columns.forEach((c) => {
-			if (!c.plottable) return;
-			const opt = document.createElement('option');
-			opt.innerHTML = c.title;
-			chc.appendChild(opt);
-			opt.setAttribute('data-cls', c.constructor.name);
-			opt.setAttribute('data-uindex', c.constructor.uindex);
-		})
 		const _create_colormap = (pre) => {
 			const div = document.createElement('div');
 			const lbl = document.createElement('label');
 			const sel = document.createElement('select');
 			const cmk = pre + "-colormap"
-
 			lbl.setAttribute('for', cmk);
 			sel.id = cmk;
 			sel.setAttribute('name', cmk);
-			sel.addEventListener('change', () => {
-				this.needsSave = true;
-			});
 			lbl.innerText = "Colormap";
 			div.appendChild(lbl);
 			div.appendChild(document.createElement("br"));
@@ -109,14 +99,6 @@ export class SceneSystemPlot extends ScenePlot1D{
 			div.classList = "system-plot-y-axis-controls";
 			return div;
 		}
-
-		chc.addEventListener('change', () => {
-			this.needsSave = true;
-			this.needsUpdate = true;
-		});
-		but1.addEventListener('click', () => {
-			this.needsDelete = true;
-		})
 		but1.innerHTML = 'Remove';
 		but1.classList = "plot-button-remove"
 
@@ -143,13 +125,27 @@ export class SceneSystemPlot extends ScenePlot1D{
 		div3.classList = "canvas-footer";
 
 		super(parent, canvas, pre + "-colormap");
+		this.register_dom_event(chc, 'change', () => {
+			this.needsSave = true;
+			this.needsUpdate = true;
+		})
+		this.register_dom_event(this.cmap, 'change', () => {
+			this.needsSave = true;
+		})
+		this.register_dom_event(but1, 'click', () => {
+			this.delete();
+		})
+		this.register_dom_event(window, 'resize', () => {
+			const m = this.get_magnification();
+			if (m != this.magnification) this.redrawWaiting = true;
+		})
 		this.sys = parent.parent;
 		this.install_axis_controls('y', axis);
-		this.needsDelete = false;
 		this.needsUpdate = true;
 		this.needsSave = true;
 
 		this.selector = chc;
+		this.update_selector();
 		if (loadPars !== undefined){
 			const cm = loadPars[1];
 			const cms = this.cmap.selector;
@@ -162,11 +158,48 @@ export class SceneSystemPlot extends ScenePlot1D{
 			}
 			this.load_axis_config('y', loadPars[2]);
 		}
-		this.addEventListener("axis-controls-change", () => {this.needsSave = true; })
-		window.addEventListener('resize', (e) => {
-			const m = this.get_magnification();
-			if (m != this.magnification) this.redrawWaiting = true;
-		});
+		this.addEventListener("axis-controls-change", () => { this.needsSave = true; })
+	}
+	delete(){
+		this.selector.remove();
+		super.delete();
+	}
+	update_selector(){
+		const cols = this.sys.calc_columns;
+		const sel = this.selector;
+		for (let i = sel.options.length - 1; i >= 0; i--) sel.remove(0);
+
+		const sections = {};
+		const sorder = [];
+		for (let i = 0; i < cols.length; i++){
+			const c = cols[i];
+			if (!c.currently_plottable) continue;
+			const s = c.section.title;
+			if (sections[s] === undefined){
+				sections[s] = [];
+				sorder.push(s);
+			}
+			sections[s].push(c);
+		}
+
+		for (let i = 0; i < sorder.length; i++){
+			const s = sorder[i];
+			let grp;
+			for (let k = 0; k < sections[s].length; k++){
+				if (k == 0){
+					grp = document.createElement('optgroup');
+					grp.setAttribute('label', s);
+					sel.appendChild(grp);
+				}
+				const c = sections[s][k];
+				this.register_dom_event(c, 'title-changed', (t) => { opt.innerHTML = t; });
+				const opt = document.createElement('option');
+				opt.innerHTML = c.selector_title;
+				grp.appendChild(opt);
+				opt.setAttribute('data-cls', c.constructor.name);
+				opt.setAttribute('data-uindex', c.constructor.uindex);
+			}
+		}
 	}
 	get save_parameters(){
 		this.needsSave = false;

@@ -33,7 +33,7 @@ export class SysColumnABC extends SceneObjectEvent{
 		this._reformatWaiting = false;
 		this.__forceHidden = false;
 		this.addEventListener('title-changed', () => {this.update_header();})
-		this.visibilitySelectors = []
+		this.visibilitySelectors = [];
 	}
 	/**
 	 * Return column Section.
@@ -42,6 +42,7 @@ export class SysColumnABC extends SceneObjectEvent{
 	 * */
 	get section(){ return this.constructor.section; }
 	get plottable(){ return this.constructor.plottable; }
+	get currently_plottable(){ return this.constructor.plottable && !this.__forceHidden; }
 	get selector_title(){
 		const t = this.constructor.selector_title;
 		if (t !== undefined) return t;
@@ -102,7 +103,7 @@ export class SysColumnABC extends SceneObjectEvent{
 		if (this.unit !== null && this.unit !== undefined) this.unit.selected_unit = u;
 	}
 	get label(){
-		if (this.unit_label == '') return this.title
+		if (this.unit_label == '' || this.unit_label == 'unitless') return this.title
 		return `${this.title} (${this.unit_label})`;
 	}
 	get parameter_key(){ return this.constructor.key; }

@@ -1,7 +1,10 @@
-export class SceneTheme{
+import {SceneObjectEvent} from "../scene/scene-event-obj.js"
+
+export class SceneTheme extends SceneObjectEvent{
 	constructor(){
+		super();
+		this.add_event_types('theme-change', 'change');
 		const ttg = document.querySelector('.theme-toggle');
-		const _callbacks = [];
 		ttg.addEventListener('click', () => {
 			if (ttg.innerHTML.includes('dark')) {
 				document.documentElement.classList.remove('dark');
@@ -21,11 +24,10 @@ export class SceneTheme{
 				document.documentElement.classList.remove('light');
 				ttg.innerHTML = 'dark';
 			}
-			for (let i = 0; i < _callbacks.length; i++) _callbacks[i](ttg.innerHTML);
+			this.trigger_event('change');
+			this.trigger_event('theme-change');
 		});
-		const _install = (cb) => {_callbacks.push(cb);}
-		window.installThemeChanged = _install;
-		this.installChanged = _install;
+		window.theme = this;
 	}
 }
 

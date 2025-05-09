@@ -16,8 +16,8 @@ export class ScenePlotManager extends SceneControl{
 		this.parent;
 		this.pcounter = 1;
 		/** @type {Array<SceneSystemPlot>} */
-		this.plots = []
-		this.find_element('add-plot').addEventListener('click', () => {
+		this.plots = [];
+		this.register_dom_event(this.find_element('add-plot'), 'click', () => {
 			this.add_plot();
 		})
 	}
@@ -33,19 +33,19 @@ export class ScenePlotManager extends SceneControl{
 	}
 	redraw(){
 		const plts = Array.from(this.plots);
-
 		this.find_element("plots").innerHTML = '';
 		this.plots = [];
-		plts.forEach((p) => {
-			if (p.needsDelete) return;
+		for (let i = 0; i < plts.length; i++){
+			const p = plts[i];
+			if (p.isDeleted) continue;
 			this.add_plot(p.save_parameters);
-		})
+		}
 	}
 	process(force){
 		let redraw = false;
 		let save = force;
 		this.plots.forEach((p) => {
-			if (p.needsDelete){
+			if (p.isDeleted){
 				redraw = true;
 				save = true;
 			}

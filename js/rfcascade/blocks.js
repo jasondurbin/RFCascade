@@ -285,7 +285,7 @@ export class SysBlockPassive extends SysBlockABC{
 		'ip3': Infinity,
 		'ip2': Infinity,
 		'temperature_offset': 0.0,
-		'symbol': "Resistor",
+		'symbol': "TLine",
 	}
 	process_inputs(){
 		this.inputs['noise_figure'].value = Math.abs(this.inputs['gain'].value);

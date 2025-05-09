@@ -4,11 +4,14 @@ import {SceneQueue} from "./scene-queue.js";
 import {ScenePopup, FindSceneURL} from "./scene-util.js";
 import {SceneBannerWarning, SceneBannerError, SceneBannerNotice, SceneTooltip} from "./scene-banners.js"
 import {SceneObjectEvent} from "./scene-event-obj.js"
-/** @import {SceneBanner} from "./scene-banners.js" */
+/**
+ * @import {SceneBanner} from "./scene-banners.js"
+ * @import {ColormapControlAny} from "../cmap/cmap-util.js"
+ * */
 
 export class SceneObjectParameterMap{
 	/**
-	* Create a mapped Parameter for Selecotrs.
+	* Create a mapped Parameter for Selectors.
 	*
 	* @param {SceneControlWithSelector} parent
 	* @param {String} skey Wrapped key (includes prepend)
@@ -87,7 +90,8 @@ export class SceneObjectABC extends SceneObjectEvent{
 		}
 		this.autoUpdateURL = autoUpdateURL;
 		this.prepend = prepend;
-		this.colormap = {};
+		/** @type {Object<string, WeakRef<ColormapControlAny>>} */
+		this.__cms = {};
 		this.changed = {};
 		this.elements = {};
 		if (controls === undefined) controls = [];
@@ -101,9 +105,14 @@ export class SceneObjectABC extends SceneObjectEvent{
 				this.control_changed(k);
 			});
 		});
+		/** @type {Array<WeakRef<SceneObjectABC>>} */
 		this._children = [];
 	}
-
+	delete(){
+		this.children().forEach((c) => {c.delete()});
+		for (const v of Object.values(this.colormaps())) v.delete();
+		super.delete();
+	}
 	/**
 	* Find DOM element from id. This automatically prepends parent key.
 	*
@@ -123,14 +132,28 @@ export class SceneObjectABC extends SceneObjectEvent{
 		return ele;
 	}
 	find_elements(elements){ elements.forEach((x) => {this.find_element(x)}); }
+	/**
+	 * Return currently available colormaps.
+	 *
+	 * @returns {Object<string, ColormapControlAny>}
+	 */
+	colormaps(){
+		const cms = {};
+		for (const [k, v] in Object.values(this.__cms)){
+			const cm = v.deref();
+			if (v) cms[k] = cm;
+			else delete this.__cms[k];
+		}
+		return cms;
+	}
 	create_mesh_colormap_selector(key, defaultSelection){
 		const cm = new MeshColormapControl(this.find_element(key), defaultSelection);
-		this.colormap[key] = cm;
+		this.__cms[key] = new WeakRef(cm);
 		return cm;
 	}
 	create_listed_colormap_selector(key, defaultSelection){
 		const cm = new ListedColormapControl(this.find_element(key), defaultSelection);
-		this.colormap[key] = cm;
+		this.__cms[key] = new WeakRef(cm);
 		return cm;
 	}
 	/**
@@ -145,9 +168,10 @@ export class SceneObjectABC extends SceneObjectEvent{
 		this.changed[key] = true;
 	}
 	clear_changed(...keys){
+		const cms = this.colormaps();
 		keys.forEach((k) => {
 			if (k in this.changed) this.changed[k] = false;
-			if (k in this.colormap) this.colormap[k].changed = false;
+			if (k in cms) cms[k].changed = false;
 		});
 	}
 	create_queue(progressElement, statusElement){
@@ -165,17 +189,39 @@ export class SceneObjectABC extends SceneObjectEvent{
 	create_popup(title, controls, callback){
 		return new ScenePopup(this, title, controls, callback);
 	}
-	add_child(child){ this._children.push(child); }
+	add_child(child){ this._children.push(new WeakRef(child)); }
 	all_children(){
 		let children = new Set([this]);
-		this._children.forEach((c) => {
+		this._children.forEach((ref) => {
+			const c = ref.deref();
+			if (!c) return;
 			children.add(c);
 			children = children.union(c.all_children());
 		})
 		return children;
 	}
-	children(){ return this._children; }
+	*children(){
+		for (let i = 0; i < this._children.length; i++){
+			const c = this._children[i].deref();
+			if (c) yield c;
+		}
+	}
 	reset_all(){ this.trigger_event('reset'); }
+	/**
+	* Add object to be watched during animation requests.
+	*
+	* @param {SceneObjectABC} obj Object to watch. Must have the method "draw_frame()".
+	* */
+	add_animation_watcher(obj){ this.parent.add_animation_watcher(obj); }
+}
+
+function _animation_watcher(){
+	/** @type {WeakRef<SceneParent>} */
+	const r = window.SceneParent;
+	const p = r.deref();
+	if (!p) return;
+	p.animation_watchers().forEach((f) => { f.draw_frame(); })
+	requestAnimationFrame(_animation_watcher);
 }
 
 export class SceneParent extends SceneObjectABC{
@@ -184,6 +230,13 @@ export class SceneParent extends SceneObjectABC{
 		/** @type {Array<SceneBanner>} */
 		this.banners = [];
 		this.tooltip = new SceneTooltip(this);
+		if (window.SceneParent !== undefined){
+			throw Error("There's already a SceneParent registered to the window.")
+		}
+		window.SceneParent = new WeakRef(this);
+		/** @type {Array<WeakRef<SceneObjectABC>>} */
+		this._drawers = [];
+		_animation_watcher();
 	}
 	/**
 	* A control with name `key` has changed.
@@ -220,7 +273,7 @@ export class SceneParent extends SceneObjectABC{
 	_iterate_children_controls(caller){
 		const cons = new Set([]);
 		this.all_children().forEach((c) => {
-			for (const [k, cmap] of Object.entries(c.colormap)){
+			for (const [k, cmap] of Object.entries(c.colormaps())){
 				const ele = cmap.selector;
 				if (cons.has(k)) continue;
 				caller(c, k, ele);
@@ -295,6 +348,18 @@ export class SceneParent extends SceneObjectABC{
 			c += b.height + 5;
 		}
 	}
+	/**
+	* Add object to be watched during animation requests.
+	*
+	* @param {SceneObjectABC} obj Object to watch. Must have the method "draw_frame()".
+	* */
+	add_animation_watcher(obj){ this._drawers.push(new WeakRef(obj)); }
+	*animation_watchers(){
+		for (let i = 0; i < this._drawers.length; i++){
+			const c = this._drawers[i].deref();
+			if (c) yield c;
+		}
+	}
 }
 
 export class SceneControl extends SceneObjectABC{
@@ -310,7 +375,7 @@ export class SceneControl extends SceneObjectABC{
 	* */
 	constructor(parent, controls, autoUpdateURL){
 		super(parent.prepend, controls, autoUpdateURL);
-		this.parent = parent;
+		this._pref = new WeakRef(parent);
 		parent.add_child(this);
 		parent.addEventListener('reset', () => {this.reset_all()})
 	}
@@ -322,6 +387,7 @@ export class SceneControl extends SceneObjectABC{
 	* @return {null}
 	* */
 	add_to_queue(queue){}
+	get parent(){ return this._pref.deref(); }
 }
 
 export class SceneControlWithSelector extends SceneControl{

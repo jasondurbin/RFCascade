@@ -1,5 +1,20 @@
-export class ColormapControl{
+import {SceneObjectEvent} from "../scene/scene-event-obj.js"
+/**
+ * @import {ListedColormapControl} from "./cmap-listed.js"
+ * @import {MeshColormapControl} from "./cmap-mesh.js"
+ * @typedef {ListedColormapControl | MeshColormapControl} ColormapControlAny
+ * */
+
+export class ColormapControl extends SceneObjectEvent{
+	/**
+	 * Create a generic ColormapControl
+	 *
+	 * @param {HTMLSelectElement} selector
+	 * @param {String} [defaultSelection]
+	 * */
 	constructor(selector, defaultSelection){
+		super();
+		this.add_event_types('change');
 		this.changed = true;
 		this.selector = selector;
 		if (defaultSelection === undefined) defaultSelection = 'viridis';
@@ -11,14 +26,16 @@ export class ColormapControl{
 			selector.appendChild(ele);
 			if (defaultSelection == cm) ele.selected = true;
 		});
-		selector.addEventListener('change', () => {
+		this.register_dom_event(selector, 'change', () => {
 			this.changed = true;
-		});
-		window.installThemeChanged(() => {
-			this.changed = true;
-		});
+			this.trigger_event('change');
+		})
+		this.register_dom_event(window.theme, 'theme-change', () => {this.changed = true;})
 	}
-	addEventListener(e, callback){ this.selector.addEventListener(e, callback); }
+	delete(){
+		this.selector.remove();
+		super.delete();
+	}
 	/**
 	 * Create and return cmap finder.
 	 *
