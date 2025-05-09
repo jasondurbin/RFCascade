@@ -52,8 +52,8 @@ export class SceneColumnSelectors extends SceneControl{
 				const hDiv = r[1];
 				b1.classList = "button-select-all";
 				b2.classList = "button-deselect-all";
-				b1.title = "Show all."
-				b2.title = "Hide all."
+				b1.title = `Show all columns under '${s.title}'.`
+				b2.title = `Hide all columns under '${s.title}'.`
 
 				cDivs[s.title] = cDiv;
 				hDiv.appendChild(b1);
